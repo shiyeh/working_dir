@@ -1,0 +1,143 @@
+#!/usr/bin/python
+# This script will generate a iptable according to
+# its rules.
+
+import os
+import sys
+import sqlite3
+import subprocess
+import init_env
+
+
+def doAllowPing():
+    global WEB_APP_DB_PATH
+    global MLB_IFACE
+    global IPTBL_FILTER_RULES
+
+    if 'WEB_APP_DB_PATH' in os.environ:
+        con = sqlite3.connect(WEB_APP_DB_PATH)
+        # con = sqlite3.connect(os.environ['WEB_APP_DB_PATH'])
+        cur = con.cursor()
+        allowPing = cur.execute(
+            "select allow_ping from lan_setting where id=1;").fetchone()[0]
+        con.close()
+
+    if allowPing == 0:
+        TMP_RULES = "-p icmp --icmp-type 8 -s 0/0 -d 0/0 -m state --state NEW -j DROP"
+        IPTBL_FILTER_RULES += "-A INPUT -i %s %s" % (MLB_IFACE, TMP_RULES)
+        IPTBL_FILTER_RULES += '\n'
+
+    print IPTBL_FILTER_RULES
+    # Just stdout
+    # sys.stdout.write(IPTBL_FILTER_RULES)
+
+
+def portForwarding():
+    global IPTBL_FILTER_RULES
+    # global IPTBL_NAT_RULES
+    # global WEB_APP_DB_PATH
+
+    # for indx in xrange(1, 6):
+        
+    #     con = sqlite3.connect(WEB_APP_DB_PATH)
+    #     # con = sqlite3.connect(os.environ['WEB_APP_DB_PATH'])
+    #     cur = con.cursor()
+    #     DB_NAT_PORTFW_EN = cur.execute(
+    #     "select active from port_forwarding where id=(?);", (indx,)).fetchone()[0]
+
+    #     print "DB_NAT_PORTFW_EN =", DB_NAT_PORTFW_EN
+
+    #     if DB_NAT_PORTFW_EN == 1:
+    #         rule = 'select ip from port_forwarding where id=(?)'
+    #         DB_NAT_PORTFW_IP = cur.execute(rule, (indx,)).fetchone()[0]
+    #         print 'DB_NAT_PORTFW_IP=', DB_NAT_PORTFW_IP
+    #         rule = 'select public_port from port_forwarding where id=(?)'
+    #         DB_NAT_PORTFW_PUBLIC = cur.execute(rule, (indx,)).fetchone()[0]
+    #         print 'DB_NAT_PORTFW_PUBLIC=', DB_NAT_PORTFW_PUBLIC
+    #         rule = 'select internal_port from port_forwarding where id=(?)'
+    #         DB_NAT_PORTFW_INTERNAL = cur.execute(rule, (indx,)).fetchone()[0]
+    #         print 'DB_NAT_PORTFW_INTERNAL=', DB_NAT_PORTFW_INTERNAL
+    #         rule = 'select protocol from port_forwarding where id=(?)'
+    #         DB_NAT_PORTFW_PROTOCOL = cur.execute(rule, (indx,)).fetchone()[0]
+    #         print 'DB_NAT_PORTFW_PROTOCOL=', DB_NAT_PORTFW_PROTOCOL
+
+    IPTBL_FILTER_RULES += "-A FORWARD -d %s/32 -p %s -m %s --dport %s -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT" % (DB_NAT_PORTFW_IP, DB_NAT_PORTFW_PROTOCOL, DB_NAT_PORTFW_PROTOCOL, DB_NAT_PORTFW_INTERNAL)
+    IPTBL_FILTER_RULES += '\n'
+    print IPTBL_FILTER_RULES
+
+    IPTBL_NAT_RULES += "-A PREROUTING -i %s -p %s -m %s --dport %s -j DNAT --to-destination %s:%s" % (MLB_IFACE, DB_NAT_PORTFW_PROTOCOL, DB_NAT_PORTFW_PROTOCOL, DB_NAT_PORTFW_PUBLIC, DB_NAT_PORTFW_IP, DB_NAT_PORTFW_INTERNAL)
+    IPTBL_NAT_RULES += '\n'
+    print IPTBL_NAT_RULES
+
+        # con.close()
+        # print '==========='
+        # sys.stdout.write(IPTBL_FILTER_RULES)
+        # sys.stdout.write(IPTBL_NAT_RULES)
+
+
+def lanForwarding():
+    global IPTBL_FILTER_RULES
+
+    IPTBL_FILTER_RULES += "-A FORWARD -i eth0 -o %s -j ACCEPT" % (MLB_IFACE)
+    IPTBL_FILTER_RULES += '\n'
+
+    print '*************'
+    print IPTBL_FILTER_RULES
+
+
+def executeQuery():
+    # global IPTBL_FILTER_RULES
+    # global IPTBL_NAT_RULES
+    # global WEB_APP_DB_PATH
+
+    con = sqlite3.connect(WEB_APP_DB_PATH)
+    # con = sqlite3.connect(os.environ['WEB_APP_DB_PATH'])
+    cur = con.cursor()
+
+    # For port forarding
+    for indx in xrange(1, 6):
+        DB_NAT_PORTFW_EN = cur.execute(
+            "select active from port_forwarding where id=(?);", (indx,)).fetchone()[0]
+        if DB_NAT_PORTFW_EN == 1:
+            rule = 'select ip from port_forwarding where id=(?)'
+            DB_NAT_PORTFW_IP = cur.execute(rule, (indx,)).fetchone()[0]
+            print 'DB_NAT_PORTFW_IP=', DB_NAT_PORTFW_IP
+            rule = 'select public_port from port_forwarding where id=(?)'
+            DB_NAT_PORTFW_PUBLIC = cur.execute(rule, (indx,)).fetchone()[0]
+            print 'DB_NAT_PORTFW_PUBLIC=', DB_NAT_PORTFW_PUBLIC
+            rule = 'select internal_port from port_forwarding where id=(?)'
+            DB_NAT_PORTFW_INTERNAL = cur.execute(rule, (indx,)).fetchone()[0]
+            print 'DB_NAT_PORTFW_INTERNAL=', DB_NAT_PORTFW_INTERNAL
+            rule = 'select protocol from port_forwarding where id=(?)'
+            DB_NAT_PORTFW_PROTOCOL = cur.execute(rule, (indx,)).fetchone()[0]
+            print 'DB_NAT_PORTFW_PROTOCOL=', DB_NAT_PORTFW_PROTOCOL
+    con.close()
+
+
+def definitation():
+    global IPTBL_FILTER_RULES
+    global IPTBL_NAT_RULES
+    global WEB_APP_DB_PATH
+    global MLB_IFACE
+    global DB_NAT_PORTFW_PROTOCOL
+    global DB_NAT_PORTFW_IP
+    global DB_NAT_PORTFW_INTERNAL
+    global DB_NAT_PORTFW_PUBLIC
+
+    MLB_IFACE = "wwan1"
+    IPTBL_FILTER_RULES = ""
+    IPTBL_NAT_RULES = ""
+    WEB_APP_DB_PATH = "/home/leo/working_dir/app.db"
+    DB_NAT_PORTFW_PROTOCOL = ""
+    DB_NAT_PORTFW_IP = ""
+    DB_NAT_PORTFW_INTERNAL = ""
+    DB_NAT_PORTFW_PUBLIC = ""
+
+
+if __name__ == '__main__':
+    # Do init.
+    
+    definitation()
+    executeQuery()
+    portForwarding()
+    # lanForwarding()

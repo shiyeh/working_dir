@@ -1,0 +1,410 @@
+
+root@am335x-evm:~# qmicli -d /dev/cdc-wdm1 --wds-start-network=internet -v
+[17 Aug 2017, 07:51:37] [Debug] [/dev/cdc-wdm1] Opening device with flags 'none'...
+[17 Aug 2017, 07:51:37] [Debug] QMI Device at '/dev/cdc-wdm1' ready
+[17 Aug 2017, 07:51:37] [Debug] [/dev/cdc-wdm1] Assuming service 'wds' is supported...
+[17 Aug 2017, 07:51:37] [Debug] [/dev/cdc-wdm1] Allocating new client ID...
+[17 Aug 2017, 07:51:37] [Debug] [/dev/cdc-wdm1] Sent message...
+<<<<<< RAW:
+<<<<<<   length = 16
+<<<<<<   data   = 01:0F:00:00:00:00:00:01:22:00:04:00:01:01:00:01
+
+[17 Aug 2017, 07:51:37] [Debug] [/dev/cdc-wdm1] Sent message (translated)...
+<<<<<< QMUX:
+<<<<<<   length  = 15
+<<<<<<   flags   = 0x00
+<<<<<<   service = "ctl"
+<<<<<<   client  = 0
+<<<<<< QMI:
+<<<<<<   flags       = "none"
+<<<<<<   transaction = 1
+<<<<<<   tlv_length  = 4
+<<<<<<   message     = "Allocate CID" (0x0022)
+<<<<<< TLV:
+<<<<<<   type       = "Service" (0x01)
+<<<<<<   length     = 1
+<<<<<<   value      = 01
+<<<<<<   translated = wds
+
+[17 Aug 2017, 07:51:37] [Debug] [/dev/cdc-wdm1] Received message...
+>>>>>> RAW:
+>>>>>>   length = 24
+>>>>>>   data   = 01:17:00:80:00:00:01:01:22:00:0C:00:02:04:00:00:00:00:00:01:02:00:01:08
+
+[17 Aug 2017, 07:51:37] [Debug] [/dev/cdc-wdm1] Received message (translated)...
+>>>>>> QMUX:
+>>>>>>   length  = 23
+>>>>>>   flags   = 0x80
+>>>>>>   service = "ctl"
+>>>>>>   client  = 0
+>>>>>> QMI:
+>>>>>>   flags       = "response"
+>>>>>>   transaction = 1
+>>>>>>   tlv_length  = 12
+>>>>>>   message     = "Allocate CID" (0x0022)
+>>>>>> TLV:
+>>>>>>   type       = "Result" (0x02)
+>>>>>>   length     = 4
+>>>>>>   value      = 00:00:00:00
+>>>>>>   translated = SUCCESS
+>>>>>> TLV:
+>>>>>>   type       = "Allocation Info" (0x01)
+>>>>>>   length     = 2
+>>>>>>   value      = 01:08
+>>>>>>   translated = [ service = 'wds' cid = '8' ]
+
+[17 Aug 2017, 07:51:37] [Debug] [/dev/cdc-wdm1] Registered 'wds' (version unknown) client with ID '8'
+[17 Aug 2017, 07:51:37] [Debug] Asynchronously starting network...
+[17 Aug 2017, 07:51:37] [Debug] [/dev/cdc-wdm1] Sent message...
+<<<<<< RAW:
+<<<<<<   length = 24
+<<<<<<   data   = 01:17:00:00:01:08:00:01:00:20:00:0B:00:14:08:00:69:6E:74:65:72:6E:65:74
+
+[17 Aug 2017, 07:51:37] [Debug] [/dev/cdc-wdm1] Sent message (translated)...
+<<<<<< QMUX:
+<<<<<<   length  = 23
+<<<<<<   flags   = 0x00
+<<<<<<   service = "wds"
+<<<<<<   client  = 8
+<<<<<< QMI:
+<<<<<<   flags       = "none"
+<<<<<<   transaction = 1
+<<<<<<   tlv_length  = 11
+<<<<<<   message     = "Start Network" (0x0020)
+<<<<<< TLV:
+<<<<<<   type       = "APN" (0x14)
+<<<<<<   length     = 8
+<<<<<<   value      = 69:6E:74:65:72:6E:65:74
+<<<<<<   translated = internet
+
+[17 Aug 2017, 07:52:22] [Debug] [/dev/cdc-wdm1] Sent message...
+<<<<<< RAW:
+<<<<<<   length = 18
+<<<<<<   data   = 01:11:00:00:01:08:00:02:00:02:00:05:00:01:02:00:01:00
+
+[17 Aug 2017, 07:52:22] [Debug] [/dev/cdc-wdm1] Sent message (translated)...
+<<<<<< QMUX:
+<<<<<<   length  = 17
+<<<<<<   flags   = 0x00
+<<<<<<   service = "wds"
+<<<<<<   client  = 8
+<<<<<< QMI:
+<<<<<<   flags       = "none"
+<<<<<<   transaction = 2
+<<<<<<   tlv_length  = 5
+<<<<<<   message     = "Abort" (0x0002)
+<<<<<< TLV:
+<<<<<<   type       = "Transaction ID" (0x01)
+<<<<<<   length     = 2
+<<<<<<   value      = 01:00
+<<<<<<   translated = 1
+
+error: operation failed: Transaction timed out
+[17 Aug 2017, 07:52:22] [Debug] [/dev/cdc-wdm1] Releasing 'wds' client with flags 'release-cid'...
+[17 Aug 2017, 07:52:22] [Debug] [/dev/cdc-wdm1] Unregistered 'wds' client with ID '8'
+[17 Aug 2017, 07:52:22] [Debug] [/dev/cdc-wdm1] Sent message...
+<<<<<< RAW:
+<<<<<<   length = 17
+<<<<<<   data   = 01:10:00:00:00:00:00:02:23:00:05:00:01:02:00:01:08
+
+[17 Aug 2017, 07:52:22] [Debug] [/dev/cdc-wdm1] Sent message (translated)...
+<<<<<< QMUX:
+<<<<<<   length  = 16
+<<<<<<   flags   = 0x00
+<<<<<<   service = "ctl"
+<<<<<<   client  = 0
+<<<<<< QMI:
+<<<<<<   flags       = "none"
+<<<<<<   transaction = 2
+<<<<<<   tlv_length  = 5
+<<<<<<   message     = "Release CID" (0x0023)
+<<<<<< TLV:
+<<<<<<   type       = "Release Info" (0x01)
+<<<<<<   length     = 2
+<<<<<<   value      = 01:08
+<<<<<<   translated = [ service = 'wds' cid = '8' ]
+
+[17 Aug 2017, 07:52:22] [Debug] [/dev/cdc-wdm1] Received message...
+>>>>>> RAW:
+>>>>>>   length = 24
+>>>>>>   data   = 01:17:00:80:00:00:01:02:23:00:0C:00:02:04:00:00:00:00:00:01:02:00:01:08
+
+[17 Aug 2017, 07:52:22] [Debug] [/dev/cdc-wdm1] Received message (translated)...
+>>>>>> QMUX:
+>>>>>>   length  = 23
+>>>>>>   flags   = 0x80
+>>>>>>   service = "ctl"
+>>>>>>   client  = 0
+>>>>>> QMI:
+>>>>>>   flags       = "response"
+>>>>>>   transaction = 2
+>>>>>>   tlv_length  = 12
+>>>>>>   message     = "Release CID" (0x0023)
+>>>>>> TLV:
+>>>>>>   type       = "Result" (0x02)
+>>>>>>   length     = 4
+>>>>>>   value      = 00:00:00:00
+>>>>>>   translated = SUCCESS
+>>>>>> TLV:
+>>>>>>   type       = "Release Info" (0x01)
+>>>>>>   length     = 2
+>>>>>>   value      = 01:08
+>>>>>>   translated = [ service = 'wds' cid = '8' ]
+
+[17 Aug 2017, 07:52:22] [Debug] Client released
+root@am335x-evm:~# qmicli -d /dev/cdc-wdm0 --wds-start-network=internet -v
+[17 Aug 2017, 07:52:46] [Debug] [/dev/cdc-wdm0] Opening device with flags 'none'...
+[17 Aug 2017, 07:52:46] [Debug] QMI Device at '/dev/cdc-wdm0' ready
+[17 Aug 2017, 07:52:46] [Debug] [/dev/cdc-wdm0] Assuming service 'wds' is supported...
+[17 Aug 2017, 07:52:46] [Debug] [/dev/cdc-wdm0] Allocating new client ID...
+[17 Aug 2017, 07:52:46] [Debug] [/dev/cdc-wdm0] Sent message...
+<<<<<< RAW:
+<<<<<<   length = 16
+<<<<<<   data   = 01:0F:00:00:00:00:00:01:22:00:04:00:01:01:00:01
+
+[17 Aug 2017, 07:52:46] [Debug] [/dev/cdc-wdm0] Sent message (translated)...
+<<<<<< QMUX:
+<<<<<<   length  = 15
+<<<<<<   flags   = 0x00
+<<<<<<   service = "ctl"
+<<<<<<   client  = 0
+<<<<<< QMI:
+<<<<<<   flags       = "none"
+<<<<<<   transaction = 1
+<<<<<<   tlv_length  = 4
+<<<<<<   message     = "Allocate CID" (0x0022)
+<<<<<< TLV:
+<<<<<<   type       = "Service" (0x01)
+<<<<<<   length     = 1
+<<<<<<   value      = 01
+<<<<<<   translated = wds
+
+[17 Aug 2017, 07:52:46] [Debug] [/dev/cdc-wdm0] Received message...
+>>>>>> RAW:
+>>>>>>   length = 24
+>>>>>>   data   = 01:17:00:80:00:00:01:01:22:00:0C:00:02:04:00:00:00:00:00:01:02:00:01:08
+
+[17 Aug 2017, 07:52:46] [Debug] [/dev/cdc-wdm0] Received message (translated)...
+>>>>>> QMUX:
+>>>>>>   length  = 23
+>>>>>>   flags   = 0x80
+>>>>>>   service = "ctl"
+>>>>>>   client  = 0
+>>>>>> QMI:
+>>>>>>   flags       = "response"
+>>>>>>   transaction = 1
+>>>>>>   tlv_length  = 12
+>>>>>>   message     = "Allocate CID" (0x0022)
+>>>>>> TLV:
+>>>>>>   type       = "Result" (0x02)
+>>>>>>   length     = 4
+>>>>>>   value      = 00:00:00:00
+>>>>>>   translated = SUCCESS
+>>>>>> TLV:
+>>>>>>   type       = "Allocation Info" (0x01)
+>>>>>>   length     = 2
+>>>>>>   value      = 01:08
+>>>>>>   translated = [ service = 'wds' cid = '8' ]
+
+[17 Aug 2017, 07:52:46] [Debug] [/dev/cdc-wdm0] Registered 'wds' (version unknown) client with ID '8'
+[17 Aug 2017, 07:52:46] [Debug] Asynchronously starting network...
+[17 Aug 2017, 07:52:46] [Debug] [/dev/cdc-wdm0] Sent message...
+<<<<<< RAW:
+<<<<<<   length = 24
+<<<<<<   data   = 01:17:00:00:01:08:00:01:00:20:00:0B:00:14:08:00:69:6E:74:65:72:6E:65:74
+
+[17 Aug 2017, 07:52:46] [Debug] [/dev/cdc-wdm0] Sent message (translated)...
+<<<<<< QMUX:
+<<<<<<   length  = 23
+<<<<<<   flags   = 0x00
+<<<<<<   service = "wds"
+<<<<<<   client  = 8
+<<<<<< QMI:
+<<<<<<   flags       = "none"
+<<<<<<   transaction = 1
+<<<<<<   tlv_length  = 11
+<<<<<<   message     = "Start Network" (0x0020)
+<<<<<< TLV:
+<<<<<<   type       = "APN" (0x14)
+<<<<<<   length     = 8
+<<<<<<   value      = 69:6E:74:65:72:6E:65:74
+<<<<<<   translated = internet
+
+[17 Aug 2017, 07:53:31] [Debug] [/dev/cdc-wdm0] Sent message...
+<<<<<< RAW:
+<<<<<<   length = 18
+<<<<<<   data   = 01:11:00:00:01:08:00:02:00:02:00:05:00:01:02:00:01:00
+
+[17 Aug 2017, 07:53:31] [Debug] [/dev/cdc-wdm0] Sent message (translated)...
+<<<<<< QMUX:
+<<<<<<   length  = 17
+<<<<<<   flags   = 0x00
+<<<<<<   service = "wds"
+<<<<<<   client  = 8
+<<<<<< QMI:
+<<<<<<   flags       = "none"
+<<<<<<   transaction = 2
+<<<<<<   tlv_length  = 5
+<<<<<<   message     = "Abort" (0x0002)
+<<<<<< TLV:
+<<<<<<   type       = "Transaction ID" (0x01)
+<<<<<<   length     = 2
+<<<<<<   value      = 01:00
+<<<<<<   translated = 1
+
+error: operation failed: Transaction timed out
+[17 Aug 2017, 07:53:31] [Debug] [/dev/cdc-wdm0] Releasing 'wds' client with flags 'release-cid'...
+[17 Aug 2017, 07:53:31] [Debug] [/dev/cdc-wdm0] Unregistered 'wds' client with ID '8'
+[17 Aug 2017, 07:53:31] [Debug] [/dev/cdc-wdm0] Sent message...
+<<<<<< RAW:
+<<<<<<   length = 17
+<<<<<<   data   = 01:10:00:00:00:00:00:02:23:00:05:00:01:02:00:01:08
+
+[17 Aug 2017, 07:53:31] [Debug] [/dev/cdc-wdm0] Sent message (translated)...
+<<<<<< QMUX:
+<<<<<<   length  = 16
+<<<<<<   flags   = 0x00
+<<<<<<   service = "ctl"
+<<<<<<   client  = 0
+<<<<<< QMI:
+<<<<<<   flags       = "none"
+<<<<<<   transaction = 2
+<<<<<<   tlv_length  = 5
+<<<<<<   message     = "Release CID" (0x0023)
+<<<<<< TLV:
+<<<<<<   type       = "Release Info" (0x01)
+<<<<<<   length     = 2
+<<<<<<   value      = 01:08
+<<<<<<   translated = [ service = 'wds' cid = '8' ]
+
+[17 Aug 2017, 07:53:31] [Debug] [/dev/cdc-wdm0] Received message...
+>>>>>> RAW:
+>>>>>>   length = 24
+>>>>>>   data   = 01:17:00:80:00:00:01:02:23:00:0C:00:02:04:00:00:00:00:00:01:02:00:01:08
+
+[17 Aug 2017, 07:53:31] [Debug] [/dev/cdc-wdm0] Received message (translated)...
+>>>>>> QMUX:
+>>>>>>   length  = 23
+>>>>>>   flags   = 0x80
+>>>>>>   service = "ctl"
+>>>>>>   client  = 0
+>>>>>> QMI:
+>>>>>>   flags       = "response"
+>>>>>>   transaction = 2
+>>>>>>   tlv_length  = 12
+>>>>>>   message     = "Release CID" (0x0023)
+>>>>>> TLV:
+>>>>>>   type       = "Result" (0x02)
+>>>>>>   length     = 4
+>>>>>>   value      = 00:00:00:00
+>>>>>>   translated = SUCCESS
+>>>>>> TLV:
+>>>>>>   type       = "Release Info" (0x01)
+>>>>>>   length     = 2
+>>>>>>   value      = 01:08
+>>>>>>   translated = [ service = 'wds' cid = '8' ]
+
+[17 Aug 2017, 07:53:31] [Debug] Client released
+root@am335x-evm:~# /opt/mlis/enable-4G.sh off
+Disable 4G module
+Aug 17 07:53:50 am335x-evm user.info kernel: [105505.269452] usb 1-1: USB disconnect, device number 2
+Aug 17 07:53:50 am335x-evm user.info kernel: [105505.286129] option1 ttyUSB0: GSM modem (1-port) converter now disconnected from ttyUSB0
+Aug 17 07:53:50 am335x-evm user.info kernel: [105505.300332] option 1-1:1.0: device disconnected
+Aug 17 07:53:50 am335x-evm user.info kernel: [105505.313671] option1 ttyUSB1: GSM modem (1-port) converter now disconnected from ttyUSB1
+Aug 17 07:53:50 am335x-evm user.info kernel: [105505.325495] option 1-1:1.2: device disconnected
+Aug 17 07:53:50 am335x-evm user.info kernel: [105505.338312] option1 ttyUSB2: GSM modem (1-port) converter now disconnected from ttyUSB2
+Aug 17 07:53:50 am335x-evm user.info kernel: [105505.349514] option 1-1:1.3: device disconnected
+Aug 17 07:53:50 am335x-evm user.info kernel: [105505.358062] qmi_wwan 1-1:1.8 wwan0: unregister 'qmi_wwan' usb-musb-hdrc.1.auto-1, WWAN/QMI device
+Aug 17 07:53:50 am335x-evm user.info kernel: [105505.394422] qmi_wwan 1-1:1.10 wwan1: unregister 'qmi_wwan' usb-musb-hdrc.1.auto-1, WWAN/QMI device
+OFF(1)
+done.
+
+
+root@am335x-evm:~# /etc/init.d/ppp start
+Starting up PPP link: pppdDisable 4G module
+done.
+
+MLB G420x SIM switch to sim1
+
+Switch to sim1
+Turn off 4G module.
+Disable 4G module
+done.
+Turn on 4G module.
+Enable 4G module
+ON(1)
+ON(2)
+
+ON(3)
+ON(4)
+ON(5)
+ON(6)
+ON(7)
+ON(8)
+ON(9)
+ON(10)
+ON(11)
+ON(12)
+Aug 17 07:54:20 am335x-evm user.info kernel: [105534.652719] usb 1-1: new high-speed USB device number 3 using musb-hdrc
+Aug 17 07:54:20 am335x-evm user.warn kernel: [105534.793373] usb 1-1: config 1 has an invalid interface number: 8 but max is 5
+Aug 17 07:54:20 am335x-evm user.warn kernel: [105534.800674] usb 1-1: config 1 has an invalid interface number: 10 but max is 5
+Aug 17 07:54:20 am335x-evm user.warn kernel: [105534.808931] usb 1-1: config 1 has an invalid interface number: 11 but max is 5
+Aug 17 07:54:20 am335x-evm user.warn kernel: [105534.816377] usb 1-1: config 1 has no interface number 1
+Aug 17 07:54:20 am335x-evm user.warn kernel: [105534.821884] usb 1-1: config 1 has no interface number 4
+Aug 17 07:54:20 am335x-evm user.warn kernel: [105534.827973] usb 1-1: config 1 has no interface number 5
+Aug 17 07:54:20 am335x-evm user.info kernel: [105534.834181] usb 1-1: New USB device found, idVendor=1199, idProduct=68c0
+Aug 17 07:54:20 am335x-evm user.info kernel: [105534.841034] usb 1-1: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+Aug 17 07:54:20 am335x-evm user.info kernel: [105534.849138] usb 1-1: Product: MC7304
+Aug 17 07:54:20 am335x-evm user.info kernel: [105534.852906] usb 1-1: Manufacturer: Sierra Wireless, Incorporated
+Aug 17 07:54:20 am335x-evm user.info kernel: [105534.871790] option 1-1:1.0: GSM modem (1-port) converter detected
+Aug 17 07:54:20 am335x-evm user.info kernel: [105534.887423] usb 1-1: GSM modem (1-port) converter now attached to ttyUSB0
+Aug 17 07:54:20 am335x-evm user.info kernel: [105534.913619] option 1-1:1.2: GSM modem (1-port) converter detected
+Aug 17 07:54:20 am335x-evm user.info kernel: [105534.951773] usb 1-1: GSM modem (1-port) converter now attached to ttyUSB1
+Aug 17 07:54:20 am335x-evm user.info kernel: [105534.973994] option 1-1:1.3: GSM modem (1-port) converter detected
+ON(13)
+done.
+done.
+Enable 4G module
+done.
+PPPD APN setting is internet
+PPPD MODEM path is /dev/cdc-wdm1
+MLB MDM Manager is running.
+.
+root@am335x-evm:~#
+root@am335x-evm:~# Aug 17 07:54:20 am335x-evm user.info kernel: [105535.001315] usb 1-1: GSM modem (1-port) converter now attached to ttyUSB2
+Aug 17 07:54:20 am335x-evm user.info kernel: [105535.033061] qmi_wwan 1-1:1.8: cdc-wdm0: USB WDM device
+Aug 17 07:54:20 am335x-evm user.info kernel: [105535.083765] qmi_wwan 1-1:1.8 wwan0: register 'qmi_wwan' at usb-musb-hdrc.1.auto-1, WWAN/QMI device, ba:52:f7:2e:3a:75
+Aug 17 07:54:20 am335x-evm user.info kernel: [105535.156398] qmi_wwan 1-1:1.10: cdc-wdm1: USB WDM device
+Aug 17 07:54:20 am335x-evm user.info kernel: [105535.185448] qmi_wwan 1-1:1.10 wwan1: register 'qmi_wwan' at usb-musb-hdrc.1.auto-1, WWAN/QMI device, ba:52:f7:2e:3a:75
+exporting MLB variables.
+Append /opt/mlis to PATH.
+++ sh /opt/mlis/qmi-network.sh /dev/cdc-wdm1 start
+Loading profile...
+APN: internet
+Starting network with '/usr/bin/qmicli -d /dev/cdc-wdm1 --wds-start-network=internet  --client-no-release-cid'...
+error: couldn't start network: QMI protocol error (14): 'CallFailed'
+call end reason (3): generic-no-service
+verbose call end reason (3,2001): [cm] no-service
+Saving state... (CID: 8)
+error: network start failed, no packet data handle
+Clearing state...
+++ sleep 5
+++ '[' -e /tmp/qmi-network-state ']'
+++ set +x
+++ sh /opt/mlis/qmi-network.sh /dev/cdc-wdm1 start
+Loading profile...
+APN: internet
+Starting network with '/usr/bin/qmicli -d /dev/cdc-wdm1 --wds-start-network=internet  --client-no-release-cid'...
+Saving state... (CID: 8)
+Saving state... (PDH: 1205572176)
+Network started successfully
+++ sleep 5
+++ '[' -e /tmp/qmi-network-state ']'
+++ set +x
+++ /sbin/ifup wwan1
+udhcpc (v1.23.1) started
+Sending discover...
+Sending select for 10.203.175.163...
+Lease of 10.203.175.163 obtained, lease time 7200
+/etc/udhcpc.d/50default: Adding DNS 168.95.1.1
+/etc/udhcpc.d/50default: Adding DNS 168.95.192.1
