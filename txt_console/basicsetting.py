@@ -274,12 +274,20 @@ class BasicDhcpMappingTbl(TableView):
     def __init__(self, model, title='System Info', parent=None):
         self._model = model
         self.parent = parent
-        self._dhcp_enable = self._model.dhcp_enable
+        self._dhcp_active = self._model.dhcp_active
         super(BasicDhcpMappingTbl, self).__init__(self.main_view())
 
+    def _dhcpactivechange(self, button, state):
+        if state:
+            self._dhcp_active = 1
+        else:
+            self._dhcp_active = 0
+
     def _apply_cb(self, button):
+        self._model.dhcp_active = int(self._dhcp_active)
         self._model.dhcp_mapping_ip = str(self._edt_mapping_ip.get_edit_text())
         self._model.dhcp_mapping_mac = str(self._edt_mapping_mac.get_edit_text())
+        # self._model.dhcp_mapping_id = str(self._number.get_text())
         self._model.set_dhcpmapping()
 
         self.parent.close_box()
@@ -295,12 +303,14 @@ class BasicDhcpMappingTbl(TableView):
 
         self._spaceline = urwid.AttrWrap(urwid.Text(""), 'button normal')
         self.no = urwid.AttrWrap(urwid.Text("No."), 'button normal')
+        self.act = urwid.AttrWrap(urwid.Text("Active"), 'button normal')
         self.ipaddr = urwid.AttrWrap(urwid.Text("IP Address"), 'button normal')
         self.macaddr = urwid.AttrWrap(urwid.Text("MAC Address"), 'button normal')
         self.listbox_content.append(
             # Create 4 columns
             urwid.Columns(
                 [('fixed', 5, self.no),
+                 ('fixed', 8, self.act),
                  ('fixed', 16, self.ipaddr),
                  ('fixed', 5, self._spaceline),
                  ('fixed', 16, self.macaddr)])
@@ -310,9 +320,17 @@ class BasicDhcpMappingTbl(TableView):
         ipaddr_edttxt = ''
         macaddr_edtcap = ''
         macaddr_edttxt = ''
+        self._list = []
 
         for indx in xrange(1, 6):
             self._number = urwid.AttrWrap(urwid.Text("{}".format(indx)), 'button normal')
+
+            _cb = self._dhcpactivechange
+            _chkbox = urwid.CheckBox("", on_state_change=_cb)
+            if int(self._dhcp_active) == 1:
+                _chkbox.set_state(True, do_callback=False)
+            self._mapping_act = urwid.AttrWrap(_chkbox, 'buttn', 'buttnf')
+
             self._edt_mapping_ip = urwid.Edit(ipaddr_edtcap, ipaddr_edttxt)
             self._edt_mapping_mac = urwid.Edit(macaddr_edtcap, macaddr_edttxt)
             self._mapping_ip = urwid.AttrWrap(self._edt_mapping_ip, 'editbx', 'editfc')
@@ -321,11 +339,15 @@ class BasicDhcpMappingTbl(TableView):
                 # Create 4 columns
                 urwid.Columns(
                     [('fixed', 5, self._number),
+                     ('fixed', 8, self._mapping_act),
                      ('fixed', 16, self._mapping_ip),
                      ('fixed', 5, self._spaceline),
                      ('fixed', 16, self._mapping_mac),
                      ])
             )
+            # self._list.append(self._edt_mapping_ip)
+            # self._list.append(self._edt_mapping_mac)
+            # print(_list)
 
         self.listbox_content.append(blank)
         self._apply = MenuButton("> Apply", self._apply_cb)
@@ -357,10 +379,6 @@ class BasicDhcpSettingTbl(TableView):
     # TODO: using singal to replace the ugly self.parent relation.
     def _apply_cb(self, button):
         self._model.dhcp_enable = int(self._dhcp_enable)
-        self._model.lanset_ipddr = str(self._edt_lanip.get_edit_text())
-        self._model.lanset_submsk = str(self._edt_lanmsk.get_edit_text())
-        self._model.pridns = str(self._edt_pridns.get_edit_text())
-        self._model.secdns = str(self._edt_secdns.get_edit_text())
         self._model.startip = str(self._edt_startip.get_edit_text())
         self._model.maxusers = str(self._edt_maxusers.get_edit_text())
         self._model.clienttime = str(self._edt_clienttime.get_edit_text())
