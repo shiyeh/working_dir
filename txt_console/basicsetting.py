@@ -309,11 +309,12 @@ class BasicDhcpMappingTbl(TableView):
         self.listbox_content.append(
             # Create 4 columns
             urwid.Columns(
-                [('fixed', 5, self.no),
+                [('fixed', 3, self.no),
                  ('fixed', 8, self.act),
                  ('fixed', 16, self.ipaddr),
-                 ('fixed', 5, self._spaceline),
-                 ('fixed', 16, self.macaddr)])
+                 ('fixed', 3, self._spaceline),
+                 ('fixed', 16, self.macaddr),
+                 ], dividechars=1)
         )
 
         ipaddr_edtcap = ''
@@ -323,6 +324,9 @@ class BasicDhcpMappingTbl(TableView):
         self._list = []
 
         for indx in xrange(1, 6):
+            # locals()['_edt_mapping_ip{}'.format(indx)]
+
+            # self._number = urwid.AttrWrap(urwid.Text("1"), 'button normal')
             self._number = urwid.AttrWrap(urwid.Text("{}".format(indx)), 'button normal')
 
             _cb = self._dhcpactivechange
@@ -331,19 +335,21 @@ class BasicDhcpMappingTbl(TableView):
                 _chkbox.set_state(True, do_callback=False)
             self._mapping_act = urwid.AttrWrap(_chkbox, 'buttn', 'buttnf')
 
+            # locals()['self._edt_mapping_ip{}'.format(indx)] = urwid.Edit(ipaddr_edtcap, ipaddr_edttxt)
             self._edt_mapping_ip = urwid.Edit(ipaddr_edtcap, ipaddr_edttxt)
             self._edt_mapping_mac = urwid.Edit(macaddr_edtcap, macaddr_edttxt)
             self._mapping_ip = urwid.AttrWrap(self._edt_mapping_ip, 'editbx', 'editfc')
+            # self._mapping_ip = urwid.AttrWrap(locals()['self._edt_mapping_ip{}'.format(indx)], 'editbx', 'editfc')
             self._mapping_mac = urwid.AttrWrap(self._edt_mapping_mac, 'editbx', 'editfc')
             self.listbox_content.append(
                 # Create 4 columns
                 urwid.Columns(
-                    [('fixed', 5, self._number),
-                     ('fixed', 8, self._mapping_act),
+                    [('fixed', 4, self._number),
+                     ('fixed', 7, self._mapping_act),
                      ('fixed', 16, self._mapping_ip),
-                     ('fixed', 5, self._spaceline),
+                     ('fixed', 3, self._spaceline),
                      ('fixed', 16, self._mapping_mac),
-                     ])
+                     ], dividechars=1)
             )
             # self._list.append(self._edt_mapping_ip)
             # self._list.append(self._edt_mapping_mac)

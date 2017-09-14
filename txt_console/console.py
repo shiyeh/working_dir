@@ -279,7 +279,7 @@ class MlisConsoleModel(object):
             self.dhcp_active = itm['active']
             self.dhcp_mapping_ip = itm['ip']
             self.dhcp_mapping_mac = itm['mac']
-            self.dhcp_mapping_id = itm['id']
+            # self.dhcp_mapping_id = itm['id']
 
     def set_dhcpmapping(self):
         _values = dict()
@@ -292,7 +292,7 @@ class MlisConsoleModel(object):
         _values['active'] = str(self.dhcp_active)
         _values['ip'] = str(self.dhcp_mapping_ip)
         _values['mac'] = str(self.dhcp_mapping_mac)
-        _values['id'] = str(self.dhcp_mapping_id)
+        # _values['id'] = str(self.dhcp_mapping_id)
         self._setdb(tbl="dhcp_mapping", values=_values)
 
 
