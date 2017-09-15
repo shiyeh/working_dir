@@ -274,11 +274,14 @@ class MlisConsoleModel(object):
 
     def get_dhcpmapping(self):
         data = self._getdb("dhcp_mapping")
+        self.dhcp_active = []
+        self.dhcp_mapping_ip = []
+        self.dhcp_mapping_mac = []
         for itm in data["dhcp_mapping"]:
             # self.dhcp_act = itm['active']
-            self.dhcp_active = itm['active']
-            self.dhcp_mapping_ip = itm['ip']
-            self.dhcp_mapping_mac = itm['mac']
+            self.dhcp_active.append(str(itm['active']))
+            self.dhcp_mapping_ip.append(str(itm['ip']))
+            self.dhcp_mapping_mac.append(str(itm['mac']))
             # self.dhcp_mapping_id = itm['id']
 
     def set_dhcpmapping(self):
@@ -288,12 +291,12 @@ class MlisConsoleModel(object):
         # _values['mac'] = str(self.dhcp_mapping_mac)
         # _values['id'] = str(self.dhcp_mapping_id)
 
-        # for ids in xrange(1, 6):
-        _values['active'] = str(self.dhcp_active)
-        _values['ip'] = str(self.dhcp_mapping_ip)
-        _values['mac'] = str(self.dhcp_mapping_mac)
-        # _values['id'] = str(self.dhcp_mapping_id)
-        self._setdb(tbl="dhcp_mapping", values=_values)
+        for index in xrange(0, 16):
+            _values['active'] = str(self.dhcp_active[index])
+            _values['ip'] = str(self.dhcp_mapping_ip[index])
+            _values['mac'] = str(self.dhcp_mapping_mac[index])
+            # _values['id'] = str(int(self.dhcp_mapping_id[index]) + 1)
+            self._setdb(tbl="dhcp_mapping", values=_values, id=index+1)
 
 
 class MlisConsoleView(object):
