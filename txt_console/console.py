@@ -20,6 +20,7 @@ from basicsetting import BasicLanSettingTbl
 from basicsetting import BasicDeviceSettingTbl
 from basicsetting import BasicDhcpSettingTbl
 from basicsetting import BasicDhcpMappingTbl
+from basicsetting import BasicPortForwardTbl
 
 
 class MlisConsoleModel(object):
@@ -295,8 +296,32 @@ class MlisConsoleModel(object):
             _values['active'] = str(self.dhcp_active[index])
             _values['ip'] = str(self.dhcp_mapping_ip[index])
             _values['mac'] = str(self.dhcp_mapping_mac[index])
-            # _values['id'] = str(int(self.dhcp_mapping_id[index]) + 1)
-            self._setdb(tbl="dhcp_mapping", values=_values, id=index+1)
+            self._setdb(tbl="dhcp_mapping", values=_values, id=index + 1)
+
+    def get_portforward(self):
+        data = self._getdb("port_forwarding")
+        self.port_forward_active = []
+        # self.protocal = []
+        self.public_port = []
+        self.internal_ip = []
+        self.internal_port = []
+        for itm in data["port_forwarding"]:
+            self.port_forward_active.append(str(itm['active']))
+            # self.protocal.append(str(itm['protocal']))
+            self.public_port.append(str(itm['public_port']))
+            self.internal_ip.append(str(itm['ip']))
+            self.internal_port.append(str(itm['internal_port']))
+
+    def set_portforward(self):
+        _values = dict()
+
+        for index in xrange(0, 32):
+            _values['active'] = str(self.port_forward_active[index])
+            # _values['protocal'] = str(self.protocal[index])
+            _values['public_port'] = str(self.public_port[index])
+            _values['ip'] = str(self.internal_ip[index])
+            _values['internal_port'] = str(self.internal_port[index])
+            self._setdb(tbl="port_forwarding", values=_values, id=index + 1)
 
 
 class MlisConsoleView(object):
@@ -345,10 +370,13 @@ class MlisConsoleView(object):
         self._submenu_dhcp_server.add_choice(MenuButton('DHCP Server', self.basic_dhcp_setting_tbl))
         self._submenu_dhcp_server.add_choice(MenuButton('Static DHCP Mapping', self.basic_dhcp_map_setting_tbl))
 
+        self._submenu_port_forward = MenuButton(' + Port forwarding', self.basic_port_forward_setting_tbl)
+
         self._submenu_basicsetting = MenuNode(self._top, 'Basic Settings')
         self._submenu_basicsetting.add_choice(self._submenu_net_setting)
         self._submenu_basicsetting.add_choice(self._submenu_wan_setting)
         self._submenu_basicsetting.add_choice(self._submenu_dhcp_server)
+        self._submenu_basicsetting.add_choice(self._submenu_port_forward)
 
         self.mainmenu.add_submenu(self._submenu_basicsetting)
         self.mainmenu.add_submenu(urwid.Divider())
@@ -424,6 +452,11 @@ class MlisConsoleView(object):
                                                    parent=self._top)
         self._top.open_box(self._dhcpmappingtbl)
 
+    def basic_port_forward_setting_tbl(self, button):
+        self._portforwardtbl = BasicPortForwardTbl(self._model,
+                                                   parent=self._top)
+        self._top.open_box(self._portforwardtbl)
+
     def cell_prioconfig_tbl(self, button):
         self._proiconfigtbl = CellPrioConfigTbl(self._model,
                                                 parent=self._top)
@@ -457,6 +490,8 @@ class MlisConsole(object):
         self.model.get_dhcpserver()
         self.model.get_dhcpmapping()
         self.model.set_dhcpmapping()
+        self.model.get_portforward()
+        self.model.set_portforward()
 
         self.view = MlisConsoleView(arg, self.model)
 

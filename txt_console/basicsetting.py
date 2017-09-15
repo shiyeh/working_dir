@@ -269,12 +269,107 @@ class CellPrioConfigTbl(TableView):
         return frame
 
 
+class BasicPortForwardTbl(TableView):
+    """docstring for BasicPortForwardTbl"""
+    def __init__(self, model, title='System Info', parent=None):
+        self._model = model
+        self.parent = parent
+        self._port_forward_active = self._model.port_forward_active
+        super(BasicPortForwardTbl, self).__init__(self.main_view())
+
+    def _portforwardactivechange(self, button, state):
+        if state:
+            self._port_forward_active = 1
+        else:
+            self._port_forward_active = 0
+
+    def _apply_cb(self, button):
+        for index in xrange(0, 5):
+            self._model.port_forward_active[index] = int(self._port_forward_active_list[index].get_state())
+            # self._model.dhcp_mapping_ip[index] = str(self._edt_mapping_ip_list[index].get_edit_text())
+            # self._model.dhcp_mapping_mac[index] = str(self._edt_mapping_mac_list[index].get_edit_text())
+            self._model.set_portforward()
+
+        self.parent.close_box()
+
+    def main_view(self):
+        blank = urwid.Divider()
+
+        self.listbox_content = []
+        self.listbox_content.append(blank)
+        self.listbox_content.append(
+            urwid.AttrWrap(urwid.Text("Port Forwarding"), 'button select'))
+        self.listbox_content.append(blank)
+
+        self._spacecolumn = urwid.AttrWrap(urwid.Text(""), 'button normal')
+        self.no = urwid.AttrWrap(urwid.Text("No."), 'button normal')
+        self.act = urwid.AttrWrap(urwid.Text("Active"), 'button normal')
+        self.protocal = urwid.AttrWrap(urwid.Text("Protocal"), 'button normal')
+        self.pub_port = urwid.AttrWrap(urwid.Text("Public Port"), 'button normal')
+        self.inter_ip = urwid.AttrWrap(urwid.Text("Internal IP"), 'button normal')
+        self.inter_port = urwid.AttrWrap(urwid.Text("Internal Port"), 'button normal')
+        self.listbox_content.append(
+            # Create 6 columns
+            urwid.Columns(
+                [('fixed', 3, self.no),
+                 ('fixed', 8, self.act),
+                 ('fixed', 9, self.protocal),
+                 ('fixed', 12, self.pub_port),
+                 ('fixed', 16, self.inter_ip),
+                 ('fixed', 16, self.inter_port),
+                 ], dividechars=1)
+        )
+
+        # ipaddr_edtcap = ''
+        # macaddr_edtcap = ''
+        self._port_forward_active_list = []
+        # self._edt_mapping_ip_list = []
+        # self._edt_mapping_mac_list = []
+
+        for index in xrange(0, 5):
+            self._number = urwid.AttrWrap(urwid.Text("{}".format(index + 1)), 'button normal')
+
+            _cb = self._portforwardactivechange
+            _chkbox = urwid.CheckBox("", on_state_change=_cb)
+            if int(self._port_forward_active[index]) == 1:
+                _chkbox.set_state(True, do_callback=False)
+            self._port_forward_act = urwid.AttrWrap(_chkbox, 'buttn', 'buttnf')
+            self._port_forward_active_list.append(self._port_forward_act)
+            # self._edt_mapping_ip = urwid.Edit(ipaddr_edtcap, self._mapping_ip[index])
+            # self._edt_mapping_ip_list.append(self._edt_mapping_ip)
+            # self._edt_mapping_mac = urwid.Edit(macaddr_edtcap, self._mapping_mac[index])
+            # self._edt_mapping_mac_list.append(self._edt_mapping_mac)
+            # self._wrap_mapping_ip = urwid.AttrWrap(self._edt_mapping_ip, 'editbx', 'editfc')
+            # self._wrap_mapping_mac = urwid.AttrWrap(self._edt_mapping_mac, 'editbx', 'editfc')
+
+            self.listbox_content.append(
+                # Create 6 columns
+                urwid.Columns(
+                    [('fixed', 4, self._number),
+                     ('fixed', 7, self._port_forward_act),
+                     # ('fixed', 16, self._wrap_mapping_ip),
+                     # ('fixed', 1, self._spacecolumn),
+                     # ('fixed', 18, self._wrap_mapping_mac),
+                     ], dividechars=1)
+            )
+
+        self.listbox_content.append(blank)
+        self._apply = MenuButton("> Apply", self._apply_cb)
+        self.listbox_content.append(self._apply)
+
+        text_header = u"Basic Setting"
+        txt = urwid.Text(['\n', text_header, '\n'], align='center')
+        header = urwid.AttrWrap(txt, 'focus heading')
+        listbox = urwid.ListBox(urwid.SimpleListWalker(self.listbox_content))
+        frame = urwid.Frame(urwid.AttrWrap(listbox, 'body'), header=header)
+        return frame
+
+
 class BasicDhcpMappingTbl(TableView):
     """docstring for BasicDhcpMappingTbl"""
     def __init__(self, model, title='System Info', parent=None):
         self._model = model
         self.parent = parent
-        # self._dhcp_active = self._model.dhcp_active
         self._dhcp_active = self._model.dhcp_active
         self._mapping_ip = self._model.dhcp_mapping_ip
         self._mapping_mac = self._model.dhcp_mapping_mac
@@ -287,16 +382,10 @@ class BasicDhcpMappingTbl(TableView):
             self._dhcp_active = 0
 
     def _apply_cb(self, button):
-        for index in xrange(0, 16):
-            self._model.dhcp_active[index] = \
-                int(self._dhcp_active_list[index].get_state())
+        for index in xrange(0, 5):
+            self._model.dhcp_active[index] = int(self._dhcp_active_list[index].get_state())
             self._model.dhcp_mapping_ip[index] = str(self._edt_mapping_ip_list[index].get_edit_text())
             self._model.dhcp_mapping_mac[index] = str(self._edt_mapping_mac_list[index].get_edit_text())
-
-            # self._model.dhcp_active = int(self._dhcp_active[index])
-            # self._model.dhcp_mapping_ip = str(self._edt_mapping_ip.get_edit_text()[index])
-            # self._model.dhcp_mapping_mac = str(self._edt_mapping_mac.get_edit_text()[index])
-            # self._model.dhcp_mapping_id = str(self._number.get_text())
             self._model.set_dhcpmapping()
 
         self.parent.close_box()
@@ -310,7 +399,7 @@ class BasicDhcpMappingTbl(TableView):
             urwid.AttrWrap(urwid.Text("Static DHCP Mapping"), 'button select'))
         self.listbox_content.append(blank)
 
-        self._spaceline = urwid.AttrWrap(urwid.Text(""), 'button normal')
+        self._spacecolumn = urwid.AttrWrap(urwid.Text(""), 'button normal')
         self.no = urwid.AttrWrap(urwid.Text("No."), 'button normal')
         self.act = urwid.AttrWrap(urwid.Text("Active"), 'button normal')
         self.ipaddr = urwid.AttrWrap(urwid.Text("IP Address"), 'button normal')
@@ -321,27 +410,18 @@ class BasicDhcpMappingTbl(TableView):
                 [('fixed', 3, self.no),
                  ('fixed', 8, self.act),
                  ('fixed', 16, self.ipaddr),
-                 ('fixed', 1, self._spaceline),
+                 ('fixed', 1, self._spacecolumn),
                  ('fixed', 16, self.macaddr),
                  ], dividechars=1)
         )
 
         ipaddr_edtcap = ''
-        ipaddr_edttxt = ''
         macaddr_edtcap = ''
-        macaddr_edttxt = ''
-        # self._list = []
-        # self._dhcp_active_list = []
-        # self._edt_mapping_ip_list = []
-        # self._edt_mapping_mac_list = []
         self._dhcp_active_list = []
         self._edt_mapping_ip_list = []
         self._edt_mapping_mac_list = []
 
-        for index in xrange(0, 16):
-            # self.listbox_content.append(urwid.Text(self._dhcp_active[index]))
-            # self.listbox_content.append(urwid.Text(self._edt_mapping_ip[index]))
-            # self.listbox_content.append(urwid.Text(self._edt_mapping_mac[index]))
+        for index in xrange(0, 5):
             self._number = urwid.AttrWrap(urwid.Text("{}".format(index + 1)), 'button normal')
 
             _cb = self._dhcpactivechange
@@ -350,7 +430,6 @@ class BasicDhcpMappingTbl(TableView):
                 _chkbox.set_state(True, do_callback=False)
             self._mapping_act = urwid.AttrWrap(_chkbox, 'buttn', 'buttnf')
             self._dhcp_active_list.append(self._mapping_act)
-
             self._edt_mapping_ip = urwid.Edit(ipaddr_edtcap, self._mapping_ip[index])
             self._edt_mapping_ip_list.append(self._edt_mapping_ip)
             self._edt_mapping_mac = urwid.Edit(macaddr_edtcap, self._mapping_mac[index])
@@ -358,52 +437,16 @@ class BasicDhcpMappingTbl(TableView):
             self._wrap_mapping_ip = urwid.AttrWrap(self._edt_mapping_ip, 'editbx', 'editfc')
             self._wrap_mapping_mac = urwid.AttrWrap(self._edt_mapping_mac, 'editbx', 'editfc')
 
-            # self.listbox_content.append(self._number)
-            # self.listbox_content.append(self._mapping_act)
-            # self.listbox_content.append(self._wrap_mapping_ip)
-            # self.listbox_content.append(self._wrap_mapping_mac)
-
             self.listbox_content.append(
                 # Create 4 columns
                 urwid.Columns(
                     [('fixed', 4, self._number),
                      ('fixed', 7, self._mapping_act),
                      ('fixed', 16, self._wrap_mapping_ip),
-                     ('fixed', 1, self._spaceline),
+                     ('fixed', 1, self._spacecolumn),
                      ('fixed', 18, self._wrap_mapping_mac),
                      ], dividechars=1)
             )
-        # for indx in xrange(1, 6):
-        #     # locals()['_edt_mapping_ip{}'.format(indx)]
-
-        #     # self._number = urwid.AttrWrap(urwid.Text("1"), 'button normal')
-        #     self._number = urwid.AttrWrap(urwid.Text("{}".format(indx)), 'button normal')
-
-        #     _cb = self._dhcpactivechange
-        #     _chkbox = urwid.CheckBox("", on_state_change=_cb)
-        #     if int(self._dhcp_active) == 1:
-        #     # if self._dhcp_active[0] == '1':
-        #         _chkbox.set_state(True, do_callback=False)
-        #     self._mapping_act = urwid.AttrWrap(_chkbox, 'buttn', 'buttnf')
-
-        #     self._edt_mapping_ip = urwid.Edit(ipaddr_edtcap, ipaddr_edttxt)
-        #     self._edt_mapping_mac = urwid.Edit(macaddr_edtcap, macaddr_edttxt)
-        #     self._mapping_ip = urwid.AttrWrap(self._edt_mapping_ip, 'editbx', 'editfc')
-        #     # self._mapping_ip = urwid.AttrWrap(locals()['self._edt_mapping_ip{}'.format(indx)], 'editbx', 'editfc')
-        #     self._mapping_mac = urwid.AttrWrap(self._edt_mapping_mac, 'editbx', 'editfc')
-        #     self.listbox_content.append(
-        #         # Create 4 columns
-        #         urwid.Columns(
-        #             [('fixed', 4, self._number),
-        #              ('fixed', 7, self._mapping_act),
-        #              ('fixed', 16, self._mapping_ip),
-        #              ('fixed', 3, self._spaceline),
-        #              ('fixed', 16, self._mapping_mac),
-        #              ], dividechars=1)
-        #     )
-        #     # self._list.append(self._edt_mapping_ip)
-        #     # self._list.append(self._edt_mapping_mac)
-        #     # print(_list)
 
         self.listbox_content.append(blank)
         self._apply = MenuButton("> Apply", self._apply_cb)

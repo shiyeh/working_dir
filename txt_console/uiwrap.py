@@ -35,16 +35,16 @@ class CascadingBoxes(urwid.WidgetPlaceholder):
         else:
             return super(CascadingBoxes, self).keypress(size, key)
 
-''' 
+'''
     MenuButton: MenuButton is the terminal node of menu tree,
                 that contain a caption and action function.
 
-    MenuNode: In usage, MenuButton is shown in list of MenuNode, 
+    MenuNode: In usage, MenuButton is shown in list of MenuNode,
               and via add_choice to append item on tue current ListBox.
               New an instance of MenuNode requires a BoxHolder as a container.
-              In current implemnetation, we used CascadingBoxes as container 
-              to provide some functions of MenuNode, like enter menu, leave menu. 
-'''  
+              In current implemnetation, we used CascadingBoxes as container
+              to provide some functions of MenuNode, like enter menu, leave menu.
+'''
 
 class MenuButton(urwid.Button):
     def __init__(self, caption, callback=None):
@@ -192,6 +192,44 @@ class TableView(urwid.WidgetWrap):
 
     def main_veiw():
         raise NotImplementedError("ust be overwrited.")
+
+
+class PopUpDialog(urwid.WidgetWrap):
+    signals = ['close']
+    def __init__(self, select_list=[], title=""):
+        close_button = urwid.Button("Close")
+        close_button._label.align = 'center'
+        urwid.connect_signal(close_button, 'click',
+            lambda button: self._emit("close"))
+
+        sl = select_list[:]
+        sl.append(urwid.Divider())
+        sl.append(close_button)
+        listbox = urwid.LineBox(urwid.ListBox(urwid.SimpleListWalker(sl)), title=title)
+        self.__super.__init__(urwid.AttrWrap(listbox, 'popbg'))
+
+
+class ThingWithAPopUp(urwid.PopUpLauncher):
+    def __init__(self, btn_name="Change", select_list=[], title=""):
+        self.select_list = select_list
+        self.title = title
+        btn = urwid.Button(btn_name)
+        # btn._label.align = 'center'
+        self.__super.__init__(btn)
+        urwid.connect_signal(self.original_widget, 'click',
+            lambda button: self.open_pop_up())
+
+    def create_pop_up(self):
+        pop_up = PopUpDialog(self.select_list, self.title)
+        urwid.connect_signal(pop_up, 'close',
+            lambda button: self.close_pop_up())
+        return pop_up
+
+    def get_pop_up_parameters(self):
+        return {'left':0,
+                'top':1,
+                'overlay_width':32,
+                'overlay_height':len(self.select_list)+4}
 
 
 def main(argv=None):
