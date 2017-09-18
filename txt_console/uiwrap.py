@@ -196,40 +196,70 @@ class TableView(urwid.WidgetWrap):
 
 class PopUpDialog(urwid.WidgetWrap):
     signals = ['close']
-    def __init__(self, select_list=[], title=""):
+    def __init__(self, option_list=[], title=""):
         close_button = urwid.Button("Close")
         close_button._label.align = 'center'
         urwid.connect_signal(close_button, 'click',
-            lambda button: self._emit("close"))
+            # lambda button: self._emit('close', 'sdf'))
+            lambda button: self.on_close())
 
-        sl = select_list[:]
-        sl.append(urwid.Divider())
-        sl.append(close_button)
-        listbox = urwid.LineBox(urwid.ListBox(urwid.SimpleListWalker(sl)), title=title)
-        self.__super.__init__(urwid.AttrWrap(listbox, 'popbg'))
+        self.ol = option_list[:]
+        self.ol.append(urwid.Divider())
+        self.ol.append(close_button)
+        self.listbox = urwid.LineBox(urwid.ListBox(urwid.SimpleListWalker(self.ol)), title=title)
+        self.__super.__init__(urwid.AttrWrap(self.listbox, 'popbg'))
 
+    def keypress(self, size, key):
+        _type = self.ol[0].__class__.__name__
+        if key == 'enter' and _type != 'CheckBox':
+            super(PopUpDialog, self).keypress(size, key)
+            self.on_close()
+        if key == 'esc':
+            self.on_close()
+        else:
+            return super(PopUpDialog, self).keypress(size, key)
+
+    def on_close(self):
+        ol = self.ol[:-2]
+        _type = ol[0].__class__.__name__
+        if _type == 'Edit':
+            _input = ol[0].get_edit_text()
+            self._emit('close', _input)
+        elif _type == 'RadioButton':
+            _input = [opt.get_label() for opt in ol if opt.get_state()][0]
+            self._emit('close', _input)
+        elif _type == 'CheckBox':
+            self._emit('close')
+        else:
+            self._emit('close')
 
 class ThingWithAPopUp(urwid.PopUpLauncher):
-    def __init__(self, btn_name="Change", select_list=[], title=""):
-        self.select_list = select_list
+    def __init__(self, btn_name="Change", option_list=[], title=""):
+        self.option_list = option_list
         self.title = title
-        btn = urwid.Button(btn_name)
-        # btn._label.align = 'center'
-        self.__super.__init__(btn)
+        self.btn = urwid.Button(btn_name)
+        self.btn._label.align = 'center'
+        self.__super.__init__(self.btn)
         urwid.connect_signal(self.original_widget, 'click',
             lambda button: self.open_pop_up())
 
     def create_pop_up(self):
-        pop_up = PopUpDialog(self.select_list, self.title)
+        pop_up = PopUpDialog(self.option_list, self.title)
         urwid.connect_signal(pop_up, 'close',
-            lambda button: self.close_pop_up())
+            # lambda button: self.close_pop_up())
+            lambda button, label=None: self.on_close(label))
         return pop_up
 
     def get_pop_up_parameters(self):
         return {'left':0,
                 'top':1,
-                'overlay_width':32,
-                'overlay_height':len(self.select_list)+4}
+                'overlay_width':30,
+                'overlay_height':len(self.option_list)+4}
+
+    def on_close(self, label=None):
+        if label != None:
+            self.btn.set_label(label)
+        self.close_pop_up()
 
 
 def main(argv=None):
