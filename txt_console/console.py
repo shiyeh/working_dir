@@ -303,24 +303,24 @@ class MlisConsoleModel(object):
         self.port_forward_active = []
         # self.protocal = []
         self.public_port = []
-        self.internal_ip = []
-        self.internal_port = []
+        self.inter_ip = []
+        self.inter_port = []
         for itm in data["port_forwarding"]:
             self.port_forward_active.append(str(itm['active']))
             # self.protocal.append(str(itm['protocal']))
             self.public_port.append(str(itm['public_port']))
-            self.internal_ip.append(str(itm['ip']))
-            self.internal_port.append(str(itm['internal_port']))
+            self.inter_ip.append(str(itm['ip']))
+            self.inter_port.append(str(itm['internal_port']))
 
     def set_portforward(self):
         _values = dict()
 
-        for index in xrange(0, 32):
+        for index in xrange(0, 5):
             _values['active'] = str(self.port_forward_active[index])
             # _values['protocal'] = str(self.protocal[index])
             _values['public_port'] = str(self.public_port[index])
-            _values['ip'] = str(self.internal_ip[index])
-            _values['internal_port'] = str(self.internal_port[index])
+            _values['ip'] = str(self.inter_ip[index])
+            _values['internal_port'] = str(self.inter_port[index])
             self._setdb(tbl="port_forwarding", values=_values, id=index + 1)
 
 

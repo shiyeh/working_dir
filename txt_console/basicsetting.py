@@ -275,6 +275,9 @@ class BasicPortForwardTbl(TableView):
         self._model = model
         self.parent = parent
         self._port_forward_active = self._model.port_forward_active
+        self._public_port = self._model.public_port
+        self._inter_ip = self._model.inter_ip
+        self._inter_port = self._model.inter_port
         super(BasicPortForwardTbl, self).__init__(self.main_view())
 
     def _portforwardactivechange(self, button, state):
@@ -286,8 +289,9 @@ class BasicPortForwardTbl(TableView):
     def _apply_cb(self, button):
         for index in xrange(0, 5):
             self._model.port_forward_active[index] = int(self._port_forward_active_list[index].get_state())
-            # self._model.dhcp_mapping_ip[index] = str(self._edt_mapping_ip_list[index].get_edit_text())
-            # self._model.dhcp_mapping_mac[index] = str(self._edt_mapping_mac_list[index].get_edit_text())
+            self._model.public_port[index] = str(self._edt_public_port_list[index].get_edit_text())
+            self._model.inter_ip[index] = str(self._edt_inter_ip_list[index].get_edit_text())
+            self._model.inter_port[index] = str(self._edt_inter_port_list[index].get_edit_text())
             self._model.set_portforward()
 
         self.parent.close_box()
@@ -301,6 +305,7 @@ class BasicPortForwardTbl(TableView):
             urwid.AttrWrap(urwid.Text("Port Forwarding"), 'button select'))
         self.listbox_content.append(blank)
 
+        ''' Body-Top '''
         self._spacecolumn = urwid.AttrWrap(urwid.Text(""), 'button normal')
         self.no = urwid.AttrWrap(urwid.Text("No."), 'button normal')
         self.act = urwid.AttrWrap(urwid.Text("Active"), 'button normal')
@@ -309,24 +314,29 @@ class BasicPortForwardTbl(TableView):
         self.inter_ip = urwid.AttrWrap(urwid.Text("Internal IP"), 'button normal')
         self.inter_port = urwid.AttrWrap(urwid.Text("Internal Port"), 'button normal')
         self.listbox_content.append(
-            # Create 6 columns
+            # Create columns
             urwid.Columns(
                 [('fixed', 3, self.no),
-                 ('fixed', 8, self.act),
+                 ('fixed', 7, self.act),
                  ('fixed', 9, self.protocal),
-                 ('fixed', 12, self.pub_port),
+                 ('fixed', 11, self.pub_port),
                  ('fixed', 16, self.inter_ip),
                  ('fixed', 16, self.inter_port),
                  ], dividechars=1)
         )
+        ''' End of Body-Top '''
 
-        # ipaddr_edtcap = ''
-        # macaddr_edtcap = ''
+        ''' Body-Mid '''
+        public_port_edtcap = ''
+        inter_ip_edtcap = ''
+        inter_port_edtcap = ''
         self._port_forward_active_list = []
-        # self._edt_mapping_ip_list = []
-        # self._edt_mapping_mac_list = []
+        self._edt_port_forward_list = []
+        self._edt_public_port_list = []
+        self._edt_inter_ip_list = []
+        self._edt_inter_port_list = []
 
-        for index in xrange(0, 5):
+        for index in xrange(0, 32):
             self._number = urwid.AttrWrap(urwid.Text("{}".format(index + 1)), 'button normal')
 
             _cb = self._portforwardactivechange
@@ -335,23 +345,28 @@ class BasicPortForwardTbl(TableView):
                 _chkbox.set_state(True, do_callback=False)
             self._port_forward_act = urwid.AttrWrap(_chkbox, 'buttn', 'buttnf')
             self._port_forward_active_list.append(self._port_forward_act)
-            # self._edt_mapping_ip = urwid.Edit(ipaddr_edtcap, self._mapping_ip[index])
-            # self._edt_mapping_ip_list.append(self._edt_mapping_ip)
-            # self._edt_mapping_mac = urwid.Edit(macaddr_edtcap, self._mapping_mac[index])
-            # self._edt_mapping_mac_list.append(self._edt_mapping_mac)
-            # self._wrap_mapping_ip = urwid.AttrWrap(self._edt_mapping_ip, 'editbx', 'editfc')
-            # self._wrap_mapping_mac = urwid.AttrWrap(self._edt_mapping_mac, 'editbx', 'editfc')
+            self._edt_public_port = urwid.Edit(public_port_edtcap, self._public_port[index])
+            self._edt_public_port_list.append(self._edt_public_port)
+            self._wrap_public_port = urwid.AttrWrap(self._edt_public_port, 'editbx', 'editfc')
+            self._edt_inter_ip = urwid.Edit(inter_ip_edtcap, self._inter_ip[index])
+            self._edt_inter_ip_list.append(self._edt_inter_ip)
+            self._wrap_inter_ip = urwid.AttrWrap(self._edt_inter_ip, 'editbx', 'editfc')
+            self._edt_inter_port = urwid.Edit(inter_port_edtcap, self._inter_port[index])
+            self._edt_inter_port_list.append(self._edt_inter_port)
+            self._wrap_inter_port = urwid.AttrWrap(self._edt_inter_port, 'editbx', 'editfc')
 
             self.listbox_content.append(
-                # Create 6 columns
+                # Create columns
                 urwid.Columns(
                     [('fixed', 4, self._number),
                      ('fixed', 7, self._port_forward_act),
-                     # ('fixed', 16, self._wrap_mapping_ip),
-                     # ('fixed', 1, self._spacecolumn),
-                     # ('fixed', 18, self._wrap_mapping_mac),
+                     ('fixed', 8, self._spacecolumn),
+                     ('fixed', 11, self._wrap_public_port),
+                     ('fixed', 16, self._wrap_inter_ip),
+                     ('fixed', 11, self._wrap_inter_port),
                      ], dividechars=1)
             )
+        ''' End of Body-Mid '''
 
         self.listbox_content.append(blank)
         self._apply = MenuButton("> Apply", self._apply_cb)
