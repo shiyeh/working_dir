@@ -233,6 +233,7 @@ class PopUpDialog(urwid.WidgetWrap):
         else:
             self._emit('close')
 
+
 class ThingWithAPopUp(urwid.PopUpLauncher):
     def __init__(self, btn_name="Change", option_list=[], title=""):
         self.option_list = option_list
@@ -261,6 +262,31 @@ class ThingWithAPopUp(urwid.PopUpLauncher):
             self.btn.set_label(label)
         self.close_pop_up()
 
+
+class IpEdit(urwid.IntEdit):
+    def keypress(self, size, key):
+        text, p = self.insert_text_result(key)
+        if key in '.0123456789':
+            if key == '.':
+                if len(text) == 1:
+                    return
+                if text[-2] != '.' and len(text.split('.')) < 5:
+                    self.insert_text(u'.')
+            else:
+                text = text.split('.')
+                if len(text) == 4 and len(text[-1]) == 4:
+                    return
+                elif len(text[-1]) >= 4:
+                    self.insert_text(u'.')
+                    self.insert_text(key)
+                else:
+                    self.insert_text(key)
+            return
+        else:
+            # super(IpEdit, self).keypress(size, key)
+            (maxcol,) = size
+            unhandled = urwid.Edit.keypress(self,(maxcol,),key)
+            return unhandled
 
 def main(argv=None):
     argv = sys.argv[1:]

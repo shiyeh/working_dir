@@ -22,6 +22,7 @@ from basicsetting import BasicDhcpSettingTbl
 from basicsetting import BasicDhcpMappingTbl
 from basicsetting import BasicPortForwardTbl
 
+from advancedsetting import AdvancedSerialPortSettingTbl
 
 class MlisConsoleModel(object):
     """docstring for MlisConsoleModel"""
@@ -252,6 +253,45 @@ class MlisConsoleModel(object):
 
         self._setdb(tbl="wan_priority_setting", values=_values)
 
+    def get_comsetting(self):
+        # {"method": "get", "table": "com_setting"}
+        # {u'com_setting': [{u'baud_rate': 115200,
+        #            u'data_bits': 8,
+        #            u'id': 1,
+        #            u'ip_addr': u'0.0.0.0',
+        #            u'parity': u'none',
+        #            u'port': u'',
+        #            u'service_mode': 0,
+        #            u'stop_bits': 1,
+        #            u'trans_mode': u'232',
+        #            u'work_mode': u'trans'}],
+        #            u'result': u'success'}
+        data = self._getdb("com_setting")
+        for itm in data["com_setting"]:
+            self.com_work_mode = itm['work_mode']
+            self.com_trans_mode = itm['trans_mode']
+            self.com_baud_rate = itm['baud_rate']
+            self.com_parity = itm['parity']
+            self.com_data_bits = itm['data_bits']
+            self.com_stop_bits = itm['stop_bits']
+            self.com_service_mode = itm['service_mode']
+            self.com_ip_addr = itm['ip_addr']
+            self.com_port = itm['port']
+
+    def set_comsetting(self):
+        _values = dict()
+        _values['work_mode'] = str(self.com_work_mode)
+        _values['trans_mode'] = str(self.com_trans_mode)
+        _values['baud_rate'] = str(self.com_baud_rate)
+        _values['parity'] = str(self.com_parity)
+        _values['data_bits'] = int(self.com_data_bits)
+        _values['stop_bits'] = int(self.com_stop_bits)
+        _values['service_mode'] = int(self.com_service_mode)
+        _values['ip_addr'] = str(self.com_ip_addr)
+        _values['port'] = str(self.com_port)
+
+        self._setdb(tbl="com_setting", values=_values)
+
     def get_dhcpserver(self):
         data = self._getdb("dhcp_server")
         for itm in data["dhcp_server"]:
@@ -301,13 +341,13 @@ class MlisConsoleModel(object):
     def get_portforward(self):
         data = self._getdb("port_forwarding")
         self.port_forward_active = []
-        # self.protocal = []
+        self.protocol = []
         self.public_port = []
         self.inter_ip = []
         self.inter_port = []
         for itm in data["port_forwarding"]:
             self.port_forward_active.append(str(itm['active']))
-            # self.protocal.append(str(itm['protocal']))
+            self.protocol.append(str(itm['protocol']))
             self.public_port.append(str(itm['public_port']))
             self.inter_ip.append(str(itm['ip']))
             self.inter_port.append(str(itm['internal_port']))
@@ -317,7 +357,7 @@ class MlisConsoleModel(object):
 
         for index in xrange(0, 5):
             _values['active'] = str(self.port_forward_active[index])
-            # _values['protocal'] = str(self.protocal[index])
+            _values['protocol'] = str(self.protocol[index])
             _values['public_port'] = str(self.public_port[index])
             _values['ip'] = str(self.inter_ip[index])
             _values['internal_port'] = str(self.inter_port[index])
@@ -378,7 +418,14 @@ class MlisConsoleView(object):
         self._submenu_basicsetting.add_choice(self._submenu_dhcp_server)
         self._submenu_basicsetting.add_choice(self._submenu_port_forward)
 
+        self._submenu_serial_setting = MenuNode(self._top, 'Serial Settings')
+        self._submenu_serial_setting.add_choice(MenuButton('Comport Settings', self.advanced_comsetting_tbl))
+
+        self._submenu_advancedsetting = MenuNode(self._top, 'Advanced Settings')
+        self._submenu_advancedsetting.add_choice(self._submenu_serial_setting)
+
         self.mainmenu.add_submenu(self._submenu_basicsetting)
+        self.mainmenu.add_submenu(self._submenu_advancedsetting)
         self.mainmenu.add_submenu(urwid.Divider())
         self.mainmenu.add_submenu(MenuButton(' > Reset to Default', self._reset_to_default))
         self.mainmenu.add_submenu(MenuButton(' > Save', self._save_to_reset))
@@ -472,6 +519,11 @@ class MlisConsoleView(object):
                                                 parent=self._top)
         self._top.open_box(self._sim2cfg_tbl)
 
+    def advanced_comsetting_tbl(self, button):
+        self._comsetting_tbl = AdvancedSerialPortSettingTbl(self._model,
+                                                parent=self._top)
+        self._top.open_box(self._comsetting_tbl)
+
 
 class MlisConsole(object):
     """docstring for MlisConsole"""
@@ -487,6 +539,7 @@ class MlisConsole(object):
         self.model.get_priosetting()
         self.model.get_wansetting()
         self.model.set_devicesetting()
+        self.model.get_comsetting()
         self.model.get_dhcpserver()
         self.model.get_dhcpmapping()
         self.model.set_dhcpmapping()

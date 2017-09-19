@@ -275,6 +275,7 @@ class BasicPortForwardTbl(TableView):
         self._model = model
         self.parent = parent
         self._port_forward_active = self._model.port_forward_active
+        self._protocol = self._model.protocol
         self._public_port = self._model.public_port
         self._inter_ip = self._model.inter_ip
         self._inter_port = self._model.inter_port
@@ -289,6 +290,7 @@ class BasicPortForwardTbl(TableView):
     def _apply_cb(self, button):
         for index in xrange(0, 5):
             self._model.port_forward_active[index] = int(self._port_forward_active_list[index].get_state())
+            self._model.protocol[index] = str(self._edt_protocol_list[index].get_edit_text())
             self._model.public_port[index] = str(self._edt_public_port_list[index].get_edit_text())
             self._model.inter_ip[index] = str(self._edt_inter_ip_list[index].get_edit_text())
             self._model.inter_port[index] = str(self._edt_inter_port_list[index].get_edit_text())
@@ -309,7 +311,7 @@ class BasicPortForwardTbl(TableView):
         self._spacecolumn = urwid.AttrWrap(urwid.Text(""), 'button normal')
         self.no = urwid.AttrWrap(urwid.Text("No."), 'button normal')
         self.act = urwid.AttrWrap(urwid.Text("Active"), 'button normal')
-        self.protocal = urwid.AttrWrap(urwid.Text("Protocal"), 'button normal')
+        self.protocol = urwid.AttrWrap(urwid.Text("protocol"), 'button normal')
         self.pub_port = urwid.AttrWrap(urwid.Text("Public Port"), 'button normal')
         self.inter_ip = urwid.AttrWrap(urwid.Text("Internal IP"), 'button normal')
         self.inter_port = urwid.AttrWrap(urwid.Text("Internal Port"), 'button normal')
@@ -318,7 +320,7 @@ class BasicPortForwardTbl(TableView):
             urwid.Columns(
                 [('fixed', 3, self.no),
                  ('fixed', 7, self.act),
-                 ('fixed', 9, self.protocal),
+                 ('fixed', 8, self.protocol),
                  ('fixed', 11, self.pub_port),
                  ('fixed', 16, self.inter_ip),
                  ('fixed', 16, self.inter_port),
@@ -328,9 +330,11 @@ class BasicPortForwardTbl(TableView):
 
         ''' Body-Mid '''
         public_port_edtcap = ''
+        protocol_edtcap = ''
         inter_ip_edtcap = ''
         inter_port_edtcap = ''
         self._port_forward_active_list = []
+        self._edt_protocol_list = []
         self._edt_port_forward_list = []
         self._edt_public_port_list = []
         self._edt_inter_ip_list = []
@@ -345,6 +349,11 @@ class BasicPortForwardTbl(TableView):
                 _chkbox.set_state(True, do_callback=False)
             self._port_forward_act = urwid.AttrWrap(_chkbox, 'buttn', 'buttnf')
             self._port_forward_active_list.append(self._port_forward_act)
+
+            self._edt_protocol = urwid.Edit(protocol_edtcap, self._protocol[index])
+            self._edt_protocol_list.append(self._edt_protocol)
+            self._wrap_protocol = urwid.AttrWrap(self._edt_protocol, 'editbx', 'editfc')
+
             self._edt_public_port = urwid.Edit(public_port_edtcap, self._public_port[index])
             self._edt_public_port_list.append(self._edt_public_port)
             self._wrap_public_port = urwid.AttrWrap(self._edt_public_port, 'editbx', 'editfc')
@@ -359,8 +368,8 @@ class BasicPortForwardTbl(TableView):
                 # Create columns
                 urwid.Columns(
                     [('fixed', 4, self._number),
-                     ('fixed', 7, self._port_forward_act),
-                     ('fixed', 8, self._spacecolumn),
+                     ('fixed', 6, self._port_forward_act),
+                     ('fixed', 8, self._wrap_protocol),
                      ('fixed', 11, self._wrap_public_port),
                      ('fixed', 16, self._wrap_inter_ip),
                      ('fixed', 11, self._wrap_inter_port),
