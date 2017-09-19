@@ -336,7 +336,7 @@ class BasicPortForwardTbl(TableView):
         self._edt_inter_ip_list = []
         self._edt_inter_port_list = []
 
-        for index in xrange(0, 32):
+        for index in xrange(0, 5):
             self._number = urwid.AttrWrap(urwid.Text("{}".format(index + 1)), 'button normal')
 
             _cb = self._portforwardactivechange
