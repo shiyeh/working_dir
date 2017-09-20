@@ -105,7 +105,7 @@ class CellSIM_X_ConfigTbl(TableView):
 
         # attached radio button list with label
         _cellarray = []
-        _txt = urwid.Text("Authentication Protocal".ljust(30) + " : ")
+        _txt = urwid.Text("Authentication Protocol".ljust(30) + " : ")
         _cellarray.append(urwid.AttrWrap(_txt, 'editcp'))
         _cellarray.append(urwid.Pile(_authmodelst))
 
@@ -316,7 +316,7 @@ class BasicPortForwardTbl(TableView):
         self._spacecolumn = urwid.AttrWrap(urwid.Text(""), 'button normal')
         self.no = urwid.AttrWrap(urwid.Text("No."), 'button normal')
         self.act = urwid.AttrWrap(urwid.Text("Active"), 'button normal')
-        self.protocol = urwid.AttrWrap(urwid.Text("Protocal"), 'button normal')
+        self.protocol = urwid.AttrWrap(urwid.Text("Protocol"), 'button normal')
         self.pub_port = urwid.AttrWrap(urwid.Text("Public Port"), 'button normal')
         self.inter_ip = urwid.AttrWrap(urwid.Text("Internal IP"), 'button normal')
         self.inter_port = urwid.AttrWrap(urwid.Text("Internal Port"), 'button normal')
@@ -449,7 +449,7 @@ class BasicDhcpMappingTbl(TableView):
                  ('fixed', 8, self.act),
                  ('fixed', 16, self.ipaddr),
                  ('fixed', 1, self._spacecolumn),
-                 ('fixed', 16, self.macaddr),
+                 ('fixed', 13, self.macaddr),
                  ], dividechars=1)
         )
 
