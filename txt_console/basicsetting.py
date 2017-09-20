@@ -358,9 +358,9 @@ class BasicPortForwardTbl(TableView):
             # Radio button for protocol
             protocol_grp = []
             urwid.RadioButton(protocol_grp, 'tcp', on_state_change=self._protocolchange,
-                              user_data='tcp' + ',' + str(index), state=str(self._protocol_opt) == 'tcp')
+                              user_data='tcp' + ',' + str(index), state=str(self._protocol_opt[index]) == 'tcp')
             urwid.RadioButton(protocol_grp, 'udp', on_state_change=self._protocolchange,
-                              user_data='udp' + ',' + str(index), state=str(self._protocol_opt) == 'udp')
+                              user_data='udp' + ',' + str(index), state=str(self._protocol_opt[index]) == 'udp')
             protocol_opt = []
             protocol_opt.extend(protocol_grp)
             btn_label = self._protocol_opt[index]
