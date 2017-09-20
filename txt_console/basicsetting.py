@@ -449,7 +449,7 @@ class BasicDhcpMappingTbl(TableView):
                  ('fixed', 8, self.act),
                  ('fixed', 16, self.ipaddr),
                  ('fixed', 1, self._spacecolumn),
-                 ('fixed', 13, self.macaddr),
+                 ('fixed', 16, self.macaddr),
                  ], dividechars=1)
         )
 
