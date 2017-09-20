@@ -21,6 +21,7 @@ def clearProcess():
         log.exception(e)
     else:
         os.system('/bin/sync')
+        os.system('/bin/sync')
         log.info('Reboot the system.')
         os.system('/sbin/reboot')
     finally:
@@ -29,10 +30,11 @@ def clearProcess():
 
 def main():
     time.sleep(1)
+    mlisFile = '/tmp/mlis.tar.gz'
 
     ''' Check if /tmp/mlis.tar.gz is exists. '''
-    if os.path.isfile('/tmp/mlis.tar.gz') is False:
-        log.error('/tmp/mlis.tar.gz not found')
+    if os.path.isfile(mlisFile) is False:
+        log.error('{} not found'.format(mlisFile))
         sys.exit(1)
 
     ''' Remove all files under /opt/mlis '''
@@ -46,7 +48,7 @@ def main():
     ''' Untar and do firmware update. '''
     _cmd = '/bin/tar'
     _cmd += ' -xvpf'
-    _cmd += '/tmp/mlis.tar.gz'
+    _cmd += ' ' + mlisFile
     _cmd += ' -C /'
     p = Popen(_cmd, shell=True, stdout=PIPE, stderr=PIPE)
     out, err = p.communicate()
