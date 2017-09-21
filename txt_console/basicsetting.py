@@ -274,6 +274,7 @@ class BasicPortForwardTbl(TableView):
     def __init__(self, model, title='System Info', parent=None):
         self._model = model
         self.parent = parent
+        self._rows = 32  # Max value of table(port_forwarding)
         self._port_forward_active = self._model.port_forward_active
         self._protocol_opt = self._model.protocol_opt
         self._public_port = self._model.public_port
@@ -293,7 +294,7 @@ class BasicPortForwardTbl(TableView):
             self._protocol_opt[int(index)] = value
 
     def _apply_cb(self, button):
-        for index in xrange(0, 5):
+        for index in xrange(0, self._rows):
             self._model.port_forward_active[index] = int(self._port_forward_active_list[index].get_state())
             self._model.protocol_opt[index] = str(self._protocol_opt[index])
             self._model.public_port[index] = str(self._edt_public_port_list[index].get_edit_text())
@@ -345,7 +346,7 @@ class BasicPortForwardTbl(TableView):
         self._edt_inter_port_list = []
         self._edt_protocol_list = []
 
-        for index in xrange(0, 5):
+        for index in xrange(0, self._rows):
             self._number = urwid.AttrWrap(urwid.Text("{}".format(index + 1)), 'button normal')
 
             _cb = self._portforwardactivechange
@@ -408,6 +409,7 @@ class BasicDhcpMappingTbl(TableView):
     def __init__(self, model, title='System Info', parent=None):
         self._model = model
         self.parent = parent
+        self._rows = 16  # Max value of table(dhcp_mapping)
         self._dhcp_active = self._model.dhcp_active
         self._mapping_ip = self._model.dhcp_mapping_ip
         self._mapping_mac = self._model.dhcp_mapping_mac
@@ -420,7 +422,7 @@ class BasicDhcpMappingTbl(TableView):
             self._dhcp_active = 0
 
     def _apply_cb(self, button):
-        for index in xrange(0, 5):
+        for index in xrange(0, self._rows):
             self._model.dhcp_active[index] = int(self._dhcp_active_list[index].get_state())
             self._model.dhcp_mapping_ip[index] = str(self._edt_mapping_ip_list[index].get_edit_text())
             self._model.dhcp_mapping_mac[index] = str(self._edt_mapping_mac_list[index].get_edit_text())
@@ -459,7 +461,7 @@ class BasicDhcpMappingTbl(TableView):
         self._edt_mapping_ip_list = []
         self._edt_mapping_mac_list = []
 
-        for index in xrange(0, 5):
+        for index in xrange(0, self._rows):
             self._number = urwid.AttrWrap(urwid.Text("{}".format(index + 1)), 'button normal')
 
             _cb = self._dhcpactivechange
