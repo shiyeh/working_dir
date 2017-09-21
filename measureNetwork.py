@@ -114,11 +114,11 @@ def mainLoop():
             ifaces[eth["interface"]]["toprx"] = ifaces[eth["interface"]]["rxrate"] if ifaces[eth["interface"]]["rxrate"] > ifaces[eth["interface"]]["toprx"] else ifaces[eth["interface"]]["toprx"]
             ifaces[eth["interface"]]["toptx"] = ifaces[eth["interface"]]["txrate"] if ifaces[eth["interface"]]["txrate"] > ifaces[eth["interface"]]["toptx"] else ifaces[eth["interface"]]["toptx"]
 
-            ''' Uncomment if needed
-            print "%s: in B/S" % (eth["interface"])
-            print "\tRX - MAX: %s AVG: %s CUR: %s" % (ifaces[eth["interface"]]["toprx"], ifaces[eth["interface"]]["avgrx"], ifaces[eth["interface"]]["rxrate"])
-            print "\tTX - MAX: %s AVG: %s CUR: %s" % (ifaces[eth["interface"]]["toptx"], ifaces[eth["interface"]]["avgtx"], ifaces[eth["interface"]]["txrate"])
-            '''
+            # Uncomment if needed
+            # print "%s: in B/S" % (eth["interface"])
+            # print "\tRX - MAX: %s AVG: %s CUR: %s" % (ifaces[eth["interface"]]["toprx"], ifaces[eth["interface"]]["avgrx"], ifaces[eth["interface"]]["rxrate"])
+            # print "\tTX - MAX: %s AVG: %s CUR: %s" % (ifaces[eth["interface"]]["toptx"], ifaces[eth["interface"]]["avgtx"], ifaces[eth["interface"]]["txrate"])
+
             print "%s:" % (eth["interface"])
             print "  RX - recvbytes: {} bytes".format(ifaces[eth["interface"]]["recvbytes"])
             print "  TX - sendbytes: {} bytes".format(ifaces[eth["interface"]]["sendbytes"])

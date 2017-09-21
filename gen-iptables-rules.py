@@ -25,7 +25,7 @@ class genTable(object):
     def portForwarding(self):
         global IPTBL_FILTER_RULES
         global IPTBL_NAT_RULES
-        log.info('*** Start to generate ruels for portForwarding. ***')
+        log.info('Generate ruels for portForwarding.')
 
         DB_NAT_PORTFW_PROTOCOL = ""
         DB_NAT_PORTFW_IP = ""
@@ -37,7 +37,7 @@ class genTable(object):
 
         for indx in xrange(1, 6):
             DB_NAT_PORTFW_EN = cur.execute("select active from port_forwarding where id=(?);", (indx,)).fetchone()[0]
-            log.debug('DB_NAT_PORTFW_EN = %s', DB_NAT_PORTFW_EN)
+            log.debug('DB_NAT_PORTFW_EN = {}'.format(DB_NAT_PORTFW_EN))
 
             if DB_NAT_PORTFW_EN == 1:
                 rule = 'select ip from port_forwarding where id=(?)'
@@ -49,18 +49,21 @@ class genTable(object):
                 rule = 'select protocol from port_forwarding where id=(?)'
                 DB_NAT_PORTFW_PROTOCOL = cur.execute(rule, (indx,)).fetchone()[0]
 
-                IPTBL_FILTER_RULES += "-A FORWARD -d %s/32 -p %s -m %s --dport %s " % (DB_NAT_PORTFW_IP, DB_NAT_PORTFW_PROTOCOL, DB_NAT_PORTFW_PROTOCOL, DB_NAT_PORTFW_INTERNAL)
+                # IPTBL_FILTER_RULES += "-A FORWARD -d %s/32 -p %s -m %s --dport %s " % (DB_NAT_PORTFW_IP, DB_NAT_PORTFW_PROTOCOL, DB_NAT_PORTFW_PROTOCOL, DB_NAT_PORTFW_INTERNAL)
+                IPTBL_FILTER_RULES += "-A FORWARD -d {}/32 -p {} -m {} --dport {} ".format(DB_NAT_PORTFW_IP,
+                                                                                           DB_NAT_PORTFW_PROTOCOL,
+                                                                                           DB_NAT_PORTFW_PROTOCOL,
+                                                                                           DB_NAT_PORTFW_INTERNAL)
                 IPTBL_FILTER_RULES += "-m state --state NEW,RELATED,ESTABLISHED -j ACCEPT"
                 IPTBL_FILTER_RULES += '\n'
 
-                IPTBL_NAT_RULES += "-A PREROUTING -i %s -p %s -m %s --dport %s -j DNAT --to-destination %s:%s" % (os.environ["MLB_IFACE"], DB_NAT_PORTFW_PROTOCOL, DB_NAT_PORTFW_PROTOCOL, DB_NAT_PORTFW_PUBLIC, DB_NAT_PORTFW_IP, DB_NAT_PORTFW_INTERNAL)
+                IPTBL_NAT_RULES += "-A PREROUTING -i {} -p {} -m {} --dport {} -j DNAT --to-destination {}:{}".format(os.environ["MLB_IFACE"], DB_NAT_PORTFW_PROTOCOL, DB_NAT_PORTFW_PROTOCOL, DB_NAT_PORTFW_PUBLIC, DB_NAT_PORTFW_IP, DB_NAT_PORTFW_INTERNAL)
                 IPTBL_NAT_RULES += '\n'
-
         con.close()
 
     def lanForwarding(self):
         global IPTBL_FILTER_RULES
-        log.info('*** Start to generate ruels for lanForwarding. ***')
+        log.info('Generate ruels for lanForwarding.')
 
         IPTBL_FILTER_RULES += "-A FORWARD -i eth0 -o %s -j ACCEPT" % (os.environ["MLB_IFACE"])
         IPTBL_FILTER_RULES += '\n'
@@ -73,7 +76,7 @@ class genTable(object):
         DB_VPN_ACTIVE = cur.execute("select active from vpn_active").fetchone()[0]
 
         if DB_VPN_ACTIVE == 1:
-            log.info('*** Start to generate ruels for IPSEC. ***')
+            log.info('Generate ruels for IPSEC.')
 
             for indx in xrange(1, 6):
                 DB_VPN_IPSEC_EN = cur.execute("select ipsec from vpn where id=(?);", (indx,)).fetchone()[0]
@@ -84,7 +87,7 @@ class genTable(object):
                     IPTBL_NAT_RULES += "-A POSTROUTING -s %s -o %s -j MASQUERADE" % (DB_VPN_LEFT_SUBNET, os.environ["MLB_IFACE"])
                     IPTBL_NAT_RULES += '\n'
         else:
-            log.info('*** IPSEC Disabled. ***')
+            log.info('IPSEC Disabled.')
 
         con.close()
 
@@ -105,18 +108,18 @@ class genTable(object):
 
         DB_OPENVPN_EN = cur.execute("select active from openvpn").fetchone()[0]
         if DB_OPENVPN_EN == 1:
-            log.info('*** Start to generate rules for OpenVPN. ***')
+            log.info('Generate rules for OpenVPN.')
             IPTBL_NAT_RULES += "-A POSTROUTING -s %s/%s -o tun+ -j MASQUERADE" % (DB_IF_ADDR_IP, IF_CIDR)
             IPTBL_NAT_RULES += '\n'
         else:
-            log.info('*** OpenVPN Disabled. ***')
+            log.info('OpenVPN Disabled.')
 
         con.close()
 
     def doNormalNatRule(self):
         # Here is normal NAT rule.
         global IPTBL_NAT_RULES
-        log.info('*** Start to generate normal rules for NAT. ***')
+        log.info('Generate normal rules for NAT.')
 
         IPTBL_NAT_RULES += "-A POSTROUTING -o %s -j MASQUERADE" % (os.environ["MLB_IFACE"])
         IPTBL_NAT_RULES += '\n'
@@ -138,7 +141,7 @@ class genTable(object):
             TMP_ACT = "ACCEPT"
 
         TMP_RULES = "-p tcp -s 0/0 --sport 1024:65535 -d 0/0 --dport 80 -m state --state NEW -j %s" % (TMP_ACT)
-        IPTBL_FILTER_RULES += "-A INPUT -i %s %s" % (os.environ["MLB_IFACE"], TMP_RULES)
+        IPTBL_FILTER_RULES += "-A INPUT -i {} {}".format(os.environ["MLB_IFACE"], TMP_RULES)
         IPTBL_FILTER_RULES += '\n'
 
         # Here is for LAN
@@ -251,8 +254,8 @@ def genIptableConf():
     except Exception as e:
         log.exception(e)
     else:
-        log.debug('Generate configuration file successfully.')
-        log.debug('Check if %s is exists.', os.environ['MLB_PPP_NAT_PATH'])
+        log.info('Generate configuration file successfully.')
+        log.info('Check if %s is exists.', os.environ['MLB_PPP_NAT_PATH'])
     finally:
         f.close()
 
@@ -265,15 +268,16 @@ def runGenRule():
                  t.genOpenVPN, t.doNormalNatRule, t.blockHttp,
                  t.blockHttps, t.blockSsh, t.blockPing]
 
-    log.info('*** Start to generate rules for all. ***')
+    log.info('*** Start to generate rules for {}. ***'.format(os.environ["MLB_IFACE"]))
     # Now call them via for loop
     for f in ruleLists:
         try:
             f()
         except Exception as e:
             log.exception(e)
+            sys.exit(1)
 
-    log.info('IPTABLE rules have been generated.')
+    log.info('All iptable rules have been generated.')
 
 
 def main():
