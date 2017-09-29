@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import os
-import init_env
+import init_mlb_env
 
 
 def main():

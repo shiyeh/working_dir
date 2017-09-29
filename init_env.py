@@ -30,7 +30,10 @@ for line in output.split('\n'):
     if os.environ.get(key) != value:
         os.environ[key] = value
 
-    print 'os.environ["%s"]=%s' % (key, value)
+    with open('aaa.py', 'a+') as f:
+        # f.write('#!/bin/python\n')
+        print('os.environ["{}"]={}'.format(key, value))
+        f.writelines('os.environ["{}"] = \"{}\"\n'.format(key, value))
 
     # print key + " = " + os.environ[key]
 # def main():

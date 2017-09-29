@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import os
 import sys
+import string
 import urwid
 
 class CascadingBoxes(urwid.WidgetPlaceholder):
@@ -206,7 +207,13 @@ class PopUpDialog(urwid.WidgetWrap):
         self.ol = option_list[:]
         self.ol.append(urwid.Divider())
         self.ol.append(close_button)
-        self.listbox = urwid.LineBox(urwid.ListBox(urwid.SimpleListWalker(self.ol)), title=title)
+        listbox = urwid.ListBox(urwid.SimpleListWalker(self.ol))
+        _type = self.ol[0].__class__.__name__
+        if _type == 'RadioButton':
+            ol = option_list[:]
+            idx = [ol.index(x) for x in ol if x.get_state()][0]
+            listbox.set_focus(idx)
+        self.listbox = urwid.LineBox(listbox, title=title)
         self.__super.__init__(urwid.AttrWrap(self.listbox, 'popbg'))
 
     def keypress(self, size, key):
@@ -235,11 +242,18 @@ class PopUpDialog(urwid.WidgetWrap):
 
 
 class ThingWithAPopUp(urwid.PopUpLauncher):
-    def __init__(self, btn_name="Change", option_list=[], title=""):
+    def __init__(self, btn_name="Change", option_list=[], title="",
+                 left=0, top=1, width=30, height=None):
         self.option_list = option_list
         self.title = title
+        self.left = left
+        self.top = top
+        self.width = width
+        self.height = height
         self.btn = urwid.Button(btn_name)
-        self.btn._label.align = 'center'
+        # p = u"\u25BC".encode('utf-8')
+        self.btn._w = urwid.AttrMap(urwid.SelectableIcon(btn_name, 1),
+                                None, focus_map='selected')
         self.__super.__init__(self.btn)
         urwid.connect_signal(self.original_widget, 'click',
             lambda button: self.open_pop_up())
@@ -247,46 +261,148 @@ class ThingWithAPopUp(urwid.PopUpLauncher):
     def create_pop_up(self):
         pop_up = PopUpDialog(self.option_list, self.title)
         urwid.connect_signal(pop_up, 'close',
-            # lambda button: self.close_pop_up())
             lambda button, label=None: self.on_close(label))
         return pop_up
 
     def get_pop_up_parameters(self):
-        return {'left':0,
-                'top':1,
-                'overlay_width':30,
-                'overlay_height':len(self.option_list)+4}
+        return {'left':self.left,
+                'top':self.top,
+                'overlay_width':self.width,
+                'overlay_height':
+                    self.height if self.height else len(self.option_list)+4}
 
     def on_close(self, label=None):
         if label != None:
-            self.btn.set_label(label)
+            # self.btn.set_label(label)
+            self.btn._w.original_widget.set_text(label)
         self.close_pop_up()
+
+
+class MacEdit(urwid.IntEdit):
+    def keypress(self, size, key):
+        p = self.edit_pos
+        t = self.get_edit_text()
+        if key in string.hexdigits+':':
+            rt, rp = self.insert_text_result(key)
+            splitText = rt.split(':')
+            if key == ':':
+                if len(rt) == 1:
+                    return
+                if rt[-2] != ':' and len(rt.split(':')) < 7:
+                    self.insert_text(u':')
+            else:
+                if any(len(num) > 2 for num in splitText):
+                    if len(splitText) < 6:
+                        self.edit_pos = len(t)
+                        self.insert_text(u':')
+                        self.insert_text(key)
+                else:
+                    self.insert_text(key)
+                t = self.get_edit_text()
+                self.set_edit_text(t.upper())
+        elif key in ['backspace', 'delete']:
+            if key == 'delete' and p not in [0, len(t)-1, len(t)]:
+                if t != '' and t[p] == ':' and len(t) != 1: p += 1
+                self.set_edit_text(t[:p]+t[p+1:])
+            elif key == 'backspace' and p not in [0, 1, len(t)]:
+                if p > 1 and t[p-1] == ':': p -= 1
+                self.set_edit_text(t[:p-1]+t[p:])
+                self.edit_pos -= 1 if p != len(self.get_edit_text())+1 else 0
+            else:
+                (maxcol,) = size
+                unhandled = urwid.Edit.keypress(self,(maxcol,),key)
+                return unhandled
+        else:
+            (maxcol,) = size
+            unhandled = urwid.Edit.keypress(self,(maxcol,),key)
+            return unhandled
 
 
 class IpEdit(urwid.IntEdit):
     def keypress(self, size, key):
-        text, p = self.insert_text_result(key)
-        if key in '.0123456789':
+        p = self.edit_pos
+        t = self.get_edit_text()
+        if key in string.digits+'.':
+            rt, rp = self.insert_text_result(key)
+            splitText = rt.split('.')
             if key == '.':
-                if len(text) == 1:
+                if len(rt) == 1:
                     return
-                if text[-2] != '.' and len(text.split('.')) < 5:
+                if rt[-2] != '.' and len(rt.split('.')) < 5:
                     self.insert_text(u'.')
             else:
-                text = text.split('.')
-                if len(text) == 4 and len(text[-1]) == 4:
-                    return
-                elif len(text[-1]) >= 4:
-                    self.insert_text(u'.')
-                    self.insert_text(key)
+                if any(len(num) > 3 for num in splitText):
+                    if len(splitText) < 4:
+                        self.edit_pos = len(t)
+                        self.insert_text(u'.')
+                        self.insert_text(key)
                 else:
                     self.insert_text(key)
-            return
+                    t = self.get_edit_text()
+                    st = t.split('.')
+                    for i, n in enumerate(st):
+                        if not n:
+                            st[i] = '0'
+                        else:
+                            st[i] = str(int(n))
+                    self.set_edit_text('.'.join(st))
+        elif key in ['backspace', 'delete']:
+            if key == 'delete' and p not in [0, len(t)-1, len(t)]:
+                if t != '' and t[p] == '.' and len(t) != 1: p += 1
+                self.set_edit_text(t[:p]+t[p+1:])
+            elif key == 'backspace' and p not in [0, 1, len(t)]:
+                if p > 1 and t[p-1] == '.': p -= 1
+                self.set_edit_text(t[:p-1]+t[p:])
+                self.edit_pos -= 1 if p != len(self.get_edit_text())+1 else 0
+            else:
+                (maxcol,) = size
+                unhandled = urwid.Edit.keypress(self,(maxcol,),key)
+                return unhandled
         else:
-            # super(IpEdit, self).keypress(size, key)
             (maxcol,) = size
             unhandled = urwid.Edit.keypress(self,(maxcol,),key)
             return unhandled
+
+
+class RangeEdit(urwid.IntEdit):
+    def __init__(self,caption="",default=None, max=float('inf'), min=0):
+        super(RangeEdit, self).__init__(caption, default)
+        self.max = max
+        self.min = min
+
+    def keypress(self, size, key):
+        text, p = self.insert_text_result(key)
+        if key in string.digits:
+            text = int(text)
+            self.set_edit_text(str(min(self.max, max(self.min, text))))
+            self.set_edit_pos(p)
+        else:
+            (maxcol,) = size
+            unhandled = urwid.Edit.keypress(self,(maxcol,),key)
+            return unhandled
+
+
+class RestrictEdit(urwid.IntEdit):
+    def __init__(self,caption="",default=None,
+                 rule=string.letters+string.digits, maxlength=float('inf'),
+                 mask=None):
+        super(RestrictEdit, self).__init__(caption, default)
+        self.maxlength = maxlength
+        self.rule = rule
+        self.set_mask(mask)
+
+    def keypress(self, size, key):
+        text, p = self.insert_text_result(key)
+        if key in self.rule:
+            if len(text) <= self.maxlength:
+                self.insert_text(key)
+        elif key in string.digits:
+            pass
+        else:
+            (maxcol,) = size
+            unhandled = urwid.Edit.keypress(self,(maxcol,),key)
+            return unhandled
+
 
 def main(argv=None):
     argv = sys.argv[1:]

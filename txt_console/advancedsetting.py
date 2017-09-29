@@ -3,7 +3,7 @@ import socket
 import sys
 import urwid
 import json
-from uiwrap import TableView, ThingWithAPopUp, IpEdit
+from uiwrap import TableView, ThingWithAPopUp, IpEdit, RangeEdit
 from mainmenu import RootMenu, MenuButton, MenuNode
 
 
@@ -308,7 +308,7 @@ class AdvancedSerialPortSettingTbl(TableView):
 
         port_edtcap = ('editcap', 'Port'.ljust(28)+': ')
         port_edttxt = str(self._port)
-        port_edt = urwid.IntEdit(port_edtcap, port_edttxt)
+        port_edt = RangeEdit(port_edtcap, port_edttxt, max=65535)
         self.port_edt = port_edt
         port_row = urwid.Columns([
             ('fixed', 60, urwid.AttrWrap(port_edt, 'editbx', 'editfc'))])

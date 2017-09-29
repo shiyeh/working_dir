@@ -3,7 +3,7 @@ import socket
 import sys
 import urwid
 import json
-from uiwrap import TableView, ThingWithAPopUp
+from uiwrap import TableView, ThingWithAPopUp, IpEdit, RangeEdit, MacEdit
 from mainmenu import RootMenu, MenuButton, MenuNode
 
 
@@ -274,7 +274,7 @@ class BasicPortForwardTbl(TableView):
     def __init__(self, model, title='System Info', parent=None):
         self._model = model
         self.parent = parent
-        self._rows = 32  # Max value of table(port_forwarding)
+        self._rows = 5  # Default value of table(port_forwarding)
         self._port_forward_active = self._model.port_forward_active
         self._protocol_opt = self._model.protocol_opt
         self._public_port = self._model.public_port
@@ -369,13 +369,14 @@ class BasicPortForwardTbl(TableView):
             self._edt_protocol_list.append(self._protocol_btn)
             # -------------------------------
 
-            self._edt_public_port = urwid.Edit(public_port_edtcap, self._public_port[index])
+            # self._edt_public_port = urwid.Edit(public_port_edtcap, self._public_port[index])
+            self._edt_public_port = RangeEdit(public_port_edtcap, self._public_port[index], max=65535)
             self._edt_public_port_list.append(self._edt_public_port)
             self._wrap_public_port = urwid.AttrWrap(self._edt_public_port, 'editbx', 'editfc')
-            self._edt_inter_ip = urwid.Edit(inter_ip_edtcap, self._inter_ip[index])
+            self._edt_inter_ip = IpEdit(inter_ip_edtcap, self._inter_ip[index])
             self._edt_inter_ip_list.append(self._edt_inter_ip)
             self._wrap_inter_ip = urwid.AttrWrap(self._edt_inter_ip, 'editbx', 'editfc')
-            self._edt_inter_port = urwid.Edit(inter_port_edtcap, self._inter_port[index])
+            self._edt_inter_port = RangeEdit(inter_port_edtcap, self._inter_port[index], max=65535)
             self._edt_inter_port_list.append(self._edt_inter_port)
             self._wrap_inter_port = urwid.AttrWrap(self._edt_inter_port, 'editbx', 'editfc')
 
@@ -409,7 +410,7 @@ class BasicDhcpMappingTbl(TableView):
     def __init__(self, model, title='System Info', parent=None):
         self._model = model
         self.parent = parent
-        self._rows = 16  # Max value of table(dhcp_mapping)
+        self._rows = 5  # Default value of table(dhcp_mapping)
         self._dhcp_active = self._model.dhcp_active
         self._mapping_ip = self._model.dhcp_mapping_ip
         self._mapping_mac = self._model.dhcp_mapping_mac
@@ -470,9 +471,9 @@ class BasicDhcpMappingTbl(TableView):
                 _chkbox.set_state(True, do_callback=False)
             self._mapping_act = urwid.AttrWrap(_chkbox, 'buttn', 'buttnf')
             self._dhcp_active_list.append(self._mapping_act)
-            self._edt_mapping_ip = urwid.Edit(ipaddr_edtcap, self._mapping_ip[index])
+            self._edt_mapping_ip = IpEdit(ipaddr_edtcap, self._mapping_ip[index])
             self._edt_mapping_ip_list.append(self._edt_mapping_ip)
-            self._edt_mapping_mac = urwid.Edit(macaddr_edtcap, self._mapping_mac[index])
+            self._edt_mapping_mac = MacEdit(macaddr_edtcap, self._mapping_mac[index])
             self._edt_mapping_mac_list.append(self._edt_mapping_mac)
             self._wrap_mapping_ip = urwid.AttrWrap(self._edt_mapping_ip, 'editbx', 'editfc')
             self._wrap_mapping_mac = urwid.AttrWrap(self._edt_mapping_mac, 'editbx', 'editfc')
@@ -558,7 +559,7 @@ class BasicDhcpSettingTbl(TableView):
 
         startip_edtcap = ('editcp', "Start IP Address".ljust(30) + " : ")
         startip_edttxt = str(self._model.startip)
-        self._edt_startip = urwid.Edit(startip_edtcap, startip_edttxt)
+        self._edt_startip = IpEdit(startip_edtcap, startip_edttxt)
         self.listbox_content.append(
             urwid.Padding(
                 urwid.AttrWrap(self._edt_startip, 'editbx', 'editfc'),
@@ -566,7 +567,7 @@ class BasicDhcpSettingTbl(TableView):
 
         maxusers_edtcap = ('editcp', "Maximum Number of Users".ljust(30) + " : ")
         maxusers_edttxt = str(self._model.maxusers)
-        self._edt_maxusers = urwid.Edit(maxusers_edtcap, maxusers_edttxt)
+        self._edt_maxusers = RangeEdit(maxusers_edtcap, maxusers_edttxt, max=20)
         self.listbox_content.append(
             urwid.Padding(
                 urwid.AttrWrap(self._edt_maxusers, 'editbx', 'editfc'),
@@ -574,7 +575,7 @@ class BasicDhcpSettingTbl(TableView):
 
         clienttime_edtcap = ('editcp', "Client Lease Time (secs)".ljust(30) + " : ")
         clienttime_edttxt = str(self._model.clienttime)
-        self._edt_clienttime = urwid.Edit(clienttime_edtcap, clienttime_edttxt)
+        self._edt_clienttime = RangeEdit(clienttime_edtcap, clienttime_edttxt, max=86400)
         self.listbox_content.append(
             urwid.Padding(
                 urwid.AttrWrap(self._edt_clienttime, 'editbx', 'editfc'),

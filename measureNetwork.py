@@ -36,13 +36,36 @@ import sys
 # nicName = "ens33"
 
 
+def printHelp():
+    print('''
+Usage:
+$ python {0} <interface> \n
+Ex:
+$ python {0} eth0
+
+        '''.format(sys.argv[0]))
+
+    sys.exit(1)
+
+
 def getNetworkInterfaces():
     ifaces = []
     with open(nicFile) as f:
         data = f.read()
 
     data = data.split("\n")[2:]
+    # print data
+    # print '*******'
 
+    # for i in data:
+    #     if i.find(sys.argv[1]) > 0:
+    #         pass
+    #     else:
+    #         data.remove(i)
+
+    # print 'data=', data
+
+    # print '*****\n', i
     for i in data:
         if len(i.strip()) > 0:
             x = i.split()
@@ -75,7 +98,7 @@ def getNetworkInterfaces():
     return ifaces
 
 
-def mainLoop():
+def main():
     ifaces = {}
 
     print "Loading Network Interfaces"
@@ -119,7 +142,7 @@ def mainLoop():
             # print "\tRX - MAX: %s AVG: %s CUR: %s" % (ifaces[eth["interface"]]["toprx"], ifaces[eth["interface"]]["avgrx"], ifaces[eth["interface"]]["rxrate"])
             # print "\tTX - MAX: %s AVG: %s CUR: %s" % (ifaces[eth["interface"]]["toptx"], ifaces[eth["interface"]]["avgtx"], ifaces[eth["interface"]]["txrate"])
 
-            print "%s:" % (eth["interface"])
+            print "{}:".format(eth["interface"])
             print "  RX - recvbytes: {} bytes".format(ifaces[eth["interface"]]["recvbytes"])
             print "  TX - sendbytes: {} bytes".format(ifaces[eth["interface"]]["sendbytes"])
             print ""
@@ -132,5 +155,11 @@ if __name__ == '__main__':
 
     nicFile = "/proc/net/dev"
 
+    # if len(sys.argv) == 2:
+    #     if '--help' == sys.argv[1]:
+    #         printHelp()
+    #     else:
+    #         pass
+
     # Monitor loop
-    mainLoop()
+    main()
