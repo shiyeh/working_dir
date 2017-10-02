@@ -54,14 +54,16 @@ def getNetworkInterfaces():
         data = f.read()
 
     data = data.split("\n")[2:]
-    # print data
+    print data
     # print '*******'
 
-    # for i in data:
-    #     if i.find(sys.argv[1]) > 0:
-    #         pass
-    #     else:
-    #         data.remove(i)
+    # if not sys.arD! {}'.format(sys.argv[1])
+
+    for i in data:
+        if i.find(sys.argv[1]) > 0:
+            pass
+        else:
+            data.remove(i)
 
     # print 'data=', data
 
@@ -155,11 +157,11 @@ if __name__ == '__main__':
 
     nicFile = "/proc/net/dev"
 
-    # if len(sys.argv) == 2:
-    #     if '--help' == sys.argv[1]:
-    #         printHelp()
-    #     else:
-    #         pass
+    if len(sys.argv) == 2:
+        if '--help' == sys.argv[1]:
+            printHelp()
+        else:
+            pass
 
     # Monitor loop
     main()
