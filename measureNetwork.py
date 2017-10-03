@@ -160,8 +160,6 @@ if __name__ == '__main__':
     if len(sys.argv) == 2:
         if '--help' == sys.argv[1]:
             printHelp()
-        else:
-            pass
 
     # Monitor loop
     main()

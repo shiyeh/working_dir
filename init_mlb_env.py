@@ -128,8 +128,8 @@ if os.path.exists('/opt/mlis/'):
     os.environ["DHCPD_IP_RANG_END"] = os.environ["IF_ADDR_SUB"] + '.22'
 
 
-print os.environ["IF_ADDR_IP"]
-print os.environ["IF_MASK_STR"]
-print os.environ["IF_ADDR_SUB"]
-print os.environ["DHCPD_IP_RANG_BGN"]
-print os.environ["DHCPD_IP_RANG_END"]
+# print os.environ["IF_ADDR_IP"]
+# print os.environ["IF_MASK_STR"]
+# print os.environ["IF_ADDR_SUB"]
+# print os.environ["DHCPD_IP_RANG_BGN"]
+# print os.environ["DHCPD_IP_RANG_END"]

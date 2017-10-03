@@ -39,7 +39,7 @@ def cancelProcess():
     except Exception:
         pass
     finally:
-        log.error('Cancel the processes due to some error.')
+        log.error('Cancel the processes due to the error.')
         sys.exit(1)
 
 
@@ -83,7 +83,7 @@ def main():
             srcFile = '/tmp/{}'.format(tmpFile)
         else:
             log.error('Untar file not correct.')
-            log.error('Please check your FW file: {}'.format(fwName))
+            log.error('Please check your FW file: {}'.format(tmpFile))
             cancelProcess()
 
     ''' Try to open original md5 file, just cat file. '''
