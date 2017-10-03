@@ -3,22 +3,24 @@
 import os
 import sys
 import sqlite3
-import init_env
+import init_mlb_env
 import logging
 
 log = logging.getLogger(__name__)
 
 
 def genNetifConf(IF_ADDR_IP, IF_MASK_STR, IF_ADDR_SUB):
-    # networkPath = os.environ['SYS_NETWORK_DIR'] + '/' + os.environ['MLB_NETWORK_IFACES']
-    networkPath = '/tmp/pathhhh'
-    print networkPath
+    # netInterfacePath = os.environ['SYS_NETWORK_DIR'] + '/' + os.environ['MLB_NETWORK_IFACES']
+    netInterfacePath = '/tmp/pawwwwwthhhh'
+    print netInterfacePath
 
-    with open(networkPath, 'w+') as f:
-            tmp = '# Begin ' + networkPath + '\n'
+    # Generate /etc/network/interfaces file
+    with open(netInterfacePath, 'w+') as f:
+            tmp = '# Begin ' + netInterfacePath + '\n'
             tmp += '# The loopback interface\n'
             tmp += 'auto lo\n'
             tmp += 'iface lo inet loopback\n'
+            tmp += '\n# Wired interfaces\n'
             tmp += 'auto eth0\n'
             tmp += 'iface eth0 inet static\n'
             tmp += '    address     {}\n'.format(IF_ADDR_IP)
@@ -26,7 +28,7 @@ def genNetifConf(IF_ADDR_IP, IF_MASK_STR, IF_ADDR_SUB):
             tmp += '    network     {}.0\n'.format(IF_ADDR_SUB)
             tmp += '    broadcast   {}.255\n'.format(IF_ADDR_SUB)
             tmp += '\niface wwan1 inet dhcp\n'
-            tmp += '# End {}\n'.format(networkPath)
+            tmp += '# End {}\n'.format(netInterfacePath)
 
             f.write(tmp)
 
