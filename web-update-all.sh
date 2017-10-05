@@ -43,11 +43,11 @@ then
 
 	### DHCP SEVER configuration.
 	DB_DHCP_EN=`sqlite3 "${WEB_APP_DB_PATH}" 'select dhcp_server from dhcp_server'`
-	DHCPD_IP_RANG_BGN=`sqlite3 "${WEB_APP_DB_PATH}" 'select start_ip from dhcp_server'`	
+	DHCPD_IP_RANG_BGN=`sqlite3 "${WEB_APP_DB_PATH}" 'select start_ip from dhcp_server'`
 	IPADDRSUB=`echo ${DHCPD_IP_RANG_BGN} | awk -F. '{printf ("%s.%s.%s", $1, $2, $3)}'`
-	DB_DHCP_IP_SUBMSK=`sqlite3 "${WEB_APP_DB_PATH}" 'select submask from dhcp_server'`	
-	DB_DHCP_IP_DNS=`sqlite3 "${WEB_APP_DB_PATH}" 'select dns from dhcp_server'`	
-	DB_DHCP_IP_SEC_DNS=`sqlite3 "${WEB_APP_DB_PATH}" 'select sec_dns from dhcp_server'`	
+	DB_DHCP_IP_SUBMSK=`sqlite3 "${WEB_APP_DB_PATH}" 'select submask from dhcp_server'`
+	DB_DHCP_IP_DNS=`sqlite3 "${WEB_APP_DB_PATH}" 'select dns from dhcp_server'`
+	DB_DHCP_IP_SEC_DNS=`sqlite3 "${WEB_APP_DB_PATH}" 'select sec_dns from dhcp_server'`
 	DB_DHCP_IP_START=`echo ${DHCPD_IP_RANG_BGN} | cut -d. -f4 | awk '{ print $1}'`
 	DB_DHCP_IP_NUM=`sqlite3 "${WEB_APP_DB_PATH}" 'select max_users from dhcp_server'`
 	DB_DHCP_IP_END=$(($DB_DHCP_IP_START+$DB_DHCP_IP_NUM-1))
@@ -60,14 +60,14 @@ then
 
 	export DHCP_STATIC_LEASE=""
 	for indx in {1..5}
-	do 
+	do
 		rule="select active from dhcp_mapping where id=${indx}"
 		DB_DHCP_STATIC_EN=`sqlite3 "${WEB_APP_DB_PATH}" "${rule}"`
 		if [ "${DB_DHCP_STATIC_EN}" = 1 ]
 		then
 			rule="select ip from dhcp_mapping where id=${indx}"
 			DB_DHCP_STC_IP=`sqlite3 "${WEB_APP_DB_PATH}" "${rule}"`
-			rule="select mac from dhcp_mapping where id=${indx}"			
+			rule="select mac from dhcp_mapping where id=${indx}"
 			DB_DHCP_STC_MAC=`sqlite3 "${WEB_APP_DB_PATH}" "${rule}"`
 
 			# Static leases map
@@ -104,14 +104,14 @@ then
     export DB_2ND_APN=`sqlite3 "${WEB_APP_DB_PATH}" "select apn from wan_setting where id=${BCKINGSIM}"`
     export DB_2ND_USR_NAME=`sqlite3 "${WEB_APP_DB_PATH}" "select username from wan_setting where id=${BCKINGSIM}"`
     export DB_2ND_PASS_WRD=`sqlite3 "${WEB_APP_DB_PATH}" "select password from wan_setting where id=${BCKINGSIM}"`
-    
+
     source "${MLB_DIR}/gen-apn-conf.sh"
     echo "APN=${DB_APN}" > "${MLB_QMI_APN_OPT_PATH}"
     if [ -n "${DB_USR_NAME}" ] && [ -n "${DB_PASS_WRD}" ]
     then
         echo "${DB_USR_NAME}    *    ${DB_PASS_WRD}" > "${MLB_CONF_DIR}/pap-secrets"
     else
-        echo "" > "${MLB_CONF_DIR}/pap-secrets"        
+        echo "" > "${MLB_CONF_DIR}/pap-secrets"
     fi
 
     ###===========VPN Setting==========================
@@ -178,7 +178,7 @@ then
                 DB_VPN_AUTO="ignore"
             elif [ "${DB_VPN_IPSEC_EN}" = 1 -a "${DB_VPN_START_MODE}" = 1 ]; then
                 DB_VPN_AUTO="start"
-            elif [ "${DB_VPN_IPSEC_EN}" = 1 -a "${DB_VPN_START_MODE}" = 0 ]; then 
+            elif [ "${DB_VPN_IPSEC_EN}" = 1 -a "${DB_VPN_START_MODE}" = 0 ]; then
                 DB_VPN_AUTO="add"
             fi
 
@@ -229,7 +229,7 @@ then
 
         DB_SNMP_AUTH_PROTO=`sqlite3 "${WEB_APP_DB_PATH}" "select auth_protocol from snmp_agent"`
         if [ "${DB_SNMP_AUTH_PROTO}" -gt 0 ]; then let ref+=2 ; else let ref+=0 ; fi
-        case ${DB_SNMP_AUTH_PROTO} in 
+        case ${DB_SNMP_AUTH_PROTO} in
             0) DB_SNMP_AUTH_PROTO='';;
             1) DB_SNMP_AUTH_PROTO="MD5";;
             2) DB_SNMP_AUTH_PROTO="SHA";;
@@ -238,20 +238,20 @@ then
 
         DB_SNMP_PRIV_PROTO=`sqlite3 "${WEB_APP_DB_PATH}" "select priv_protocol from snmp_agent"`
         if [ "${DB_SNMP_PRIV_PROTO}" -gt 0 ]; then let ref+=1 ; else let ref+=0 ; fi
-        case ${DB_SNMP_PRIV_PROTO} in 
+        case ${DB_SNMP_PRIV_PROTO} in
             0) DB_SNMP_PRIV_PROTO='';;
             1) DB_SNMP_PRIV_PROTO="DES";;
             2) DB_SNMP_PRIV_PROTO="AES";;
         esac
         DB_SNMP_PRIV_KEY=`sqlite3 "${WEB_APP_DB_PATH}" "select priv_key from snmp_agent"`
-        
+
         if [ ${ref} -ge 4 ]; then DB_SNMP_AC+="createUser ${DB_SNMP_READ_COMMUNITY}" ; fi
         if [ ${ref} -ge 6 ]; then DB_SNMP_AC+=" ${DB_SNMP_AUTH_PROTO} \"${DB_SNMP_AUTH_KEY}\"" ; fi
         if [ ${ref} -ge 7 ]; then DB_SNMP_AC+=" ${DB_SNMP_PRIV_PROTO} \"${DB_SNMP_PRIV_KEY}\"" ; fi
 
         DB_SNMP_AC+=$'\n'
         DB_SNMP_AC+=$'\n'
-        if [ ${DB_SNMP_AGENT_VER} -le 2 ]; 
+        if [ ${DB_SNMP_AGENT_VER} -le 2 ];
         then
             DB_SNMP_AC+="#        sec.name  source          community"$'\n'
             DB_SNMP_AC+="com2sec  readonly  default         ${DB_SNMP_READ_COMMUNITY}"$'\n'
@@ -272,10 +272,10 @@ then
         fi
         source gen-snmp-conf.sh
         update-rc.d -f snmpd defaults
-    else 
+    else
         update-rc.d -f snmpd remove
     fi
-    
+
     ###========OpenVPN setting=================
     DB_OPENVPN_EN=`sqlite3 "${WEB_APP_DB_PATH}" "select active from openvpn"`
     if [ "${DB_OPENVPN_EN}" = 1 ]
@@ -290,10 +290,10 @@ then
         rm -f ${SYS_OPENVPN_CONF_DIR}/*
         cp -f ${MLB_OPENVPN_CONF_DIR}/${DB_OPENVPN_CONF} ${SYS_OPENVPN_CONF_DIR}
         update-rc.d -f openvpn defaults
-    else 
+    else
         update-rc.d -f openvpn remove
     fi
-    
+
     BACKUP_PATH="${MLB_PPP_NAT_PATH}"
 
     # Generate iptables config file by call python script
