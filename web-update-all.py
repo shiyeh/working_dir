@@ -166,19 +166,16 @@ def main():
         # os.system(_rule)
     else:
         pass
-        # _rule = '/usr/sbin/update-rc.d remove'
+        # _rule = '/usr/sbin/update-rc.d -f udhcpd remove'
         # os.system(_rule)
 
     genDhcpdConf(DHCPD_IP_START, DHCPD_IP_END, DHCP_STATIC_LEASE,
                  DB_DHCP_IP_DNS, DB_DHCP_IP_SEC_DNS, DHCP_IP_SUBMASK,
                  IF_ADDR_IP, DHCP_CLIENT_TIME)
 
-    '''MODEM INTERNET CONNECTION setting.'''
+    ''' MODEM INTERNET CONNECTION setting. '''
     PRISIM = cur.execute("select priority from wan_priority_setting where id=1;").fetchone()[0]
-    print type(PRISIM)
-    print 'PRISIM=', PRISIM
     if PRISIM == 1:
-        print 'HHHHHHHH'
         BCKINGSIM = '2'
     elif PRISIM == 2:
         BCKINGSIM = '1'
