@@ -9,6 +9,34 @@ import logging
 log = logging.getLogger(__name__)
 
 
+def genVpnConf(VPN_IPSEC_CONF_RULES):
+    # vpnConfPath = os.environ['MLB_VPN_CFG_PATH']
+    vpnConfPath = '/tmp/vpn_conf'
+
+    # Generate /opt/mlis/conf/ipsec.conf file
+    with open(vpnConfPath, 'w+') as f:
+        tmp = '#!/bin/sh\n'
+        tmp += '# Begin ' + vpnConfPath + '\n'
+        tmp += '# ipsec.conf - strongSwan IPsec configuration file\n'
+        tmp += '\n'
+        tmp += '# basic configuration\n'
+        tmp += '\n'
+        tmp += 'config setup\n'
+        tmp += '        # strictcrlpolicy=yes\n'
+        tmp += '        # uniqueids = no\n'
+        tmp += '\n'
+        tmp += '# Add connections here.\n'
+        tmp += '\n'
+        tmp += 'conn %default\n'
+        tmp += '        mobike=no\n'
+        tmp += '        keyingtries=%forever\n'
+        tmp += '\n'
+        tmp += VPN_IPSEC_CONF_RULES
+        tmp += '# End {}\n'.format(vpnConfPath)
+
+        f.write(tmp)
+
+
 def genApnConf(PRISIM, BCKINGSIM, DB_APN, DB_USR_NAME, DB_PASS_WRD,
                DB_2ND_APN, DB_2ND_USR_NAME, DB_2ND_PASS_WRD):
     # apnConfPath = os.environ['MLB_PPP_APN_OPT_PATH']
@@ -43,59 +71,60 @@ def genDhcpdConf(DHCPD_IP_START, DHCPD_IP_END, DHCP_STATIC_LEASE,
 
     # Generate /etc/udhcpd.conf file
     with open(dhcpdConfPath, 'w+') as f:
-            tmp = '# Begin {}\n'.format(dhcpdConfPath)
-            tmp += '# The start and end of the IP lease block\n'
-            tmp += 'start       {}\n'.format(DHCPD_IP_START)
-            tmp += 'end         {}\n'.format(DHCPD_IP_END)
-            tmp += '# The interface that udhcpd will use\n'
-            tmp += 'interface {}\n'.format(os.environ['DHCPD_USED_IF'])
-            tmp += '# The location of the pid file\n'
-            tmp += 'pidfile     /var/run/udhcpd.pid\n\n'
-            tmp += '# Static leases map\n'
-            tmp += '{}\n\n'.format(DHCP_STATIC_LEASE)
-            tmp += '''# The remainder of options are DHCP options and can be specified with the
+        tmp = '# Begin {}\n'.format(dhcpdConfPath)
+        tmp += '# The start and end of the IP lease block\n'
+        tmp += 'start       {}\n'.format(DHCPD_IP_START)
+        tmp += 'end         {}\n'.format(DHCPD_IP_END)
+        tmp += '# The interface that udhcpd will use\n'
+        tmp += 'interface {}\n'.format(os.environ['DHCPD_USED_IF'])
+        tmp += '# The location of the pid file\n'
+        tmp += 'pidfile     /var/run/udhcpd.pid\n\n'
+        tmp += '# Static leases map\n'
+        tmp += '{}\n\n'.format(DHCP_STATIC_LEASE)
+        tmp += '''# The remainder of options are DHCP options and can be specified with the
 # keyword 'opt' or 'option'. If an option can take multiple items, such
 # as the dns option, they can be listed on the same line, or multiple
 # lines.\n'''
-            tmp += 'opt         dns     {} {} #public google dns servers\n'.format(DB_DHCP_IP_DNS, DB_DHCP_IP_SEC_DNS)
-            tmp += 'option      subnet  {}\n'.format(DHCP_IP_SUBMASK)
-            tmp += 'opt         router  {}\n'.format(IF_ADDR_IP)
-            tmp += 'option      lease   {} # default: 10 days\n'.format(DHCP_CLIENT_TIME)
-            tmp += '# Arbitrary option in hex form:\n'
-            tmp += 'option      0x08    01020304 # option 8: "cookie server IP addr: 1.2.3.4"\n'
-            tmp += '# The location of the leases file\n'
-            tmp += 'lease_file     /var/lib/misc/udhcpd.leases\n\n'
-            tmp += '# End {}\n'.format(dhcpdConfPath)
+        tmp += 'opt         dns     {} {} #public google dns servers\n'.format(DB_DHCP_IP_DNS, DB_DHCP_IP_SEC_DNS)
+        tmp += 'option      subnet  {}\n'.format(DHCP_IP_SUBMASK)
+        tmp += 'opt         router  {}\n'.format(IF_ADDR_IP)
+        tmp += 'option      lease   {} # default: 10 days\n'.format(DHCP_CLIENT_TIME)
+        tmp += '# Arbitrary option in hex form:\n'
+        tmp += 'option      0x08    01020304 # option 8: "cookie server IP addr: 1.2.3.4"\n'
+        tmp += '# The location of the leases file\n'
+        tmp += 'lease_file     /var/lib/misc/udhcpd.leases\n\n'
+        tmp += '# End {}\n'.format(dhcpdConfPath)
 
-            f.write(tmp)
+        f.write(tmp)
 
 
-def genNetifConf(IF_ADDR_IP, IF_MASK_STR, IF_NETWORK, IF_BROADCAST):
+def genNetifConf(IF_ADDR_IP, IF_MASK_STR,
+                 IF_NETWORK, IF_BROADCAST):
     # netInterfacePath = os.environ['SYS_NETWORK_DIR'] + '/' + os.environ['MLB_NETWORK_IFACES']
     netInterfacePath = '/tmp/pawwwwwthhhh'
     # print netInterfacePath
 
     # Generate /etc/network/interfaces file
     with open(netInterfacePath, 'w+') as f:
-            tmp = '# Begin ' + netInterfacePath + '\n'
-            tmp += '# The loopback interface\n'
-            tmp += 'auto lo\n'
-            tmp += 'iface lo inet loopback\n'
-            tmp += '\n# Wired interfaces\n'
-            tmp += 'auto eth0\n'
-            tmp += 'iface eth0 inet static\n'
-            tmp += '    address     {}\n'.format(IF_ADDR_IP)
-            tmp += '    netmask     {}\n'.format(IF_MASK_STR)
-            tmp += '    network     {}\n'.format(IF_NETWORK)
-            tmp += '    broadcast   {}\n'.format(IF_BROADCAST)
-            tmp += '\niface wwan1 inet dhcp\n'
-            tmp += '# End {}\n'.format(netInterfacePath)
+        tmp = '# Begin ' + netInterfacePath + '\n'
+        tmp += '# The loopback interface\n'
+        tmp += 'auto lo\n'
+        tmp += 'iface lo inet loopback\n'
+        tmp += '\n# Wired interfaces\n'
+        tmp += 'auto eth0\n'
+        tmp += 'iface eth0 inet static\n'
+        tmp += '    address     {}\n'.format(IF_ADDR_IP)
+        tmp += '    netmask     {}\n'.format(IF_MASK_STR)
+        tmp += '    network     {}\n'.format(IF_NETWORK)
+        tmp += '    broadcast   {}\n'.format(IF_BROADCAST)
+        tmp += '\niface wwan1 inet dhcp\n'
+        tmp += '# End {}\n'.format(netInterfacePath)
 
-            f.write(tmp)
+        f.write(tmp)
 
 
 def mask2CIDR(submask):
-    # calculate mask to cidr
+    # Calculate netmask to CIDR.
     return sum([bin(int(x)).count("1") for x in submask.split(".")])
 
 
@@ -128,7 +157,8 @@ def main():
     # print 'IF_NETWORK=',IF_NETWORK
     # print 'IF_BROADCAST=',IF_BROADCAST
 
-    genNetifConf(IF_ADDR_IP, IF_MASK_STR, IF_NETWORK, IF_BROADCAST)
+    genNetifConf(IF_ADDR_IP, IF_MASK_STR,
+                 IF_NETWORK, IF_BROADCAST)
 
     ''' DHCP SEVER configuration. '''
     DB_DHCP_EN = cur.execute("select dhcp_server from dhcp_server").fetchone()[0]
@@ -162,12 +192,12 @@ def main():
 
     if DB_DHCP_EN == 1:
         pass
-        # _rule = '/usr/sbin/update-rc.d -f udhcpd defaults'
-        # os.system(_rule)
+        # _cmd = '/usr/sbin/update-rc.d -f udhcpd defaults'
+        # os.system(_cmd)
     else:
         pass
-        # _rule = '/usr/sbin/update-rc.d -f udhcpd remove'
-        # os.system(_rule)
+        # _cmd = '/usr/sbin/update-rc.d -f udhcpd remove'
+        # os.system(_cmd)
 
     genDhcpdConf(DHCPD_IP_START, DHCPD_IP_END, DHCP_STATIC_LEASE,
                  DB_DHCP_IP_DNS, DB_DHCP_IP_SEC_DNS, DHCP_IP_SUBMASK,
@@ -203,7 +233,116 @@ def main():
         else:
             f.write('{0}    *    {1}\n'.format(DB_USR_NAME, DB_PASS_WRD))
 
+    ''' Ipsec VPN Setting '''
+    DB_VPN_ACTIVE = cur.execute("select active from vpn_active").fetchone()[0]
+    DB_VPN_POSTROUTING_INDX = ()
+    VPN_IPSEC_CONF_RULES = ''
+    VPN_IPSEC_SECRETS_RULES = ''
+
+    if DB_VPN_ACTIVE == 0:
+        _cmd = '/usr/sbin/update-rc.d -f ipsec remove'
+        os.system(_cmd)
+    else:
+        for indx in xrange(1, 6):
+            DB_VPN_IPSEC_EN = cur.execute("select ipsec from vpn where id=(?);", (indx,)).fetchone()[0]
+            if DB_VPN_IPSEC_EN == 0:
+                continue
+
+            DB_VPN_POSTROUTING_INDX += indx
+            DB_VPN_CONN_NAME = cur.execute("select conn_name from vpn where id=(?);", (indx,)).fetchone()[0]
+            DB_VPN_LEFT = cur.execute("select _left from vpn where id=(?);", (indx,)).fetchone()[0]
+            DB_VPN_START_MODE = cur.execute("select startup_mode from vpn where id=(?);", (indx,)).fetchone()[0]
+            DB_VPN_LEFT_SUBNET = cur.execute("select leftsubnet from vpn where id=(?);", (indx,)).fetchone()[0]
+            DB_VPN_LEFTID = cur.execute("select leftid from vpn where id=(?);", (indx,)).fetchone()[0]
+            DB_VPN_RIGHT = cur.execute("select _right from vpn where id=(?);", (indx,)).fetchone()[0]
+            DB_VPN_RIGHT_SUBNET = cur.execute("select rightsubnet from vpn where id=(?);", (indx,)).fetchone()[0]
+            DB_VPN_RIGHTID = cur.execute("select rightid from vpn where id=(?);", (indx,)).fetchone()[0]
+            DB_VPN_IKE_MODE = cur.execute("select keyexchange from vpn where id=(?);", (indx,)).fetchone()[0]
+            DB_VPN_OPER_MODE = cur.execute("select aggressive from vpn where id=(?);", (indx,)).fetchone()[0]
+            DB_VPN_IKE_ENCRYPT = cur.execute("select ike from vpn where id=(?);", (indx,)).fetchone()[0]
+            DB_VPN_LIFETIME = cur.execute("select lifetime from vpn where id=(?);", (indx,)).fetchone()[0]
+            DB_VPN_REKEY = cur.execute("select rekey from vpn where id=(?);", (indx,)).fetchone()[0]
+            DB_VPN_ESP = cur.execute("select esp from vpn where id=(?);", (indx,)).fetchone()[0]
+            DB_VPN_DPD_ACTION = cur.execute("select dpdaction from vpn where id=(?);", (indx,)).fetchone()[0]
+            DB_VPN_DPD_DELAY = cur.execute("select dpddelay from vpn where id=(?);", (indx,)).fetchone()[0]
+            DB_VPN_DPD_TIMEOUT = cur.execute("select dpdtimeout from vpn where id=(?);", (indx,)).fetchone()[0]
+            DB_VPN_AUTH_MODE = cur.execute("select auth_mode from vpn where id=(?);", (indx,)).fetchone()[0]
+            DB_VPN_PSK = cur.execute("select psk from vpn where id=(?);", (indx,)).fetchone()[0]
+            DB_VPN_LOCAL_CERT = cur.execute("select local_cert from vpn where id=(?);", (indx,)).fetchone()[0]
+            DB_VPN_REMOTE_CERT = cur.execute("select remote_cert from vpn where id=(?);", (indx,)).fetchone()[0]
+            if DB_VPN_IPSEC_EN == 0:
+                DB_VPN_AUTO = 'ignore'
+            elif DB_VPN_IPSEC_EN == 1 and DB_VPN_START_MODE == 1:
+                DB_VPN_AUTO = 'start'
+            elif DB_VPN_IPSEC_EN == 1 and DB_VPN_START_MODE == 0:
+                DB_VPN_AUTO = 'add'
+            else:
+                pass
+
+            VPN_IPSEC_CONF_RULES += 'conn {}\n'.format(DB_VPN_CONN_NAME)
+            VPN_IPSEC_CONF_RULES += '        authby={}\n'.format(DB_VPN_AUTH_MODE)
+            VPN_IPSEC_CONF_RULES += '        aggressive={}\n'.format(DB_VPN_OPER_MODE)
+            VPN_IPSEC_CONF_RULES += '        keyexchange={}\n'.format(DB_VPN_IKE_MODE)
+            VPN_IPSEC_CONF_RULES += '        dpdaction={}\n'.format(DB_VPN_DPD_ACTION)
+            VPN_IPSEC_CONF_RULES += '        dpddelay={}\n'.format(DB_VPN_DPD_DELAY)
+            VPN_IPSEC_CONF_RULES += '        dpdtimeout={}\n'.format(DB_VPN_DPD_TIMEOUT)
+            VPN_IPSEC_CONF_RULES += '        ike={}\n'.format(DB_VPN_IKE_ENCRYPT)
+            VPN_IPSEC_CONF_RULES += '        esp={}\n'.format(DB_VPN_ESP)
+            VPN_IPSEC_CONF_RULES += '        lifetime={}\n'.format(DB_VPN_LIFETIME)
+            VPN_IPSEC_CONF_RULES += '        rekey={}\n'.format(DB_VPN_REKEY)
+            VPN_IPSEC_CONF_RULES += '        left=%any\n'
+            if DB_VPN_AUTH_MODE == 'pubkey':
+                VPN_IPSEC_CONF_RULES += '        leftcert=local/{}\n'.format(DB_VPN_LOCAL_CERT)
+            VPN_IPSEC_CONF_RULES += '        leftsubnet={}\n'.format(DB_VPN_LEFT_SUBNET)
+            VPN_IPSEC_CONF_RULES += '        leftid=\"{}\"\n'.format(DB_VPN_LEFTID)
+            VPN_IPSEC_CONF_RULES += '        right={}\n'.format(DB_VPN_RIGHT)
+            if DB_VPN_AUTH_MODE == 'pubkey':
+                VPN_IPSEC_CONF_RULES += '        rightcert=remote/{}\n'.format(DB_VPN_REMOTE_CERT)
+            VPN_IPSEC_CONF_RULES += '        rightsubnet={}\n'.format(DB_VPN_RIGHT_SUBNET)
+            VPN_IPSEC_CONF_RULES += '        rightid=\"{}\"\n'.format(DB_VPN_RIGHTID)
+            VPN_IPSEC_CONF_RULES += '        auto={}\n'.format(DB_VPN_AUTO)
+            if DB_VPN_AUTH_MODE == 'pubkey':
+                VPN_IPSEC_SECRETS_RULES += '\"{}\" : RSA {}\n'.format(DB_VPN_RIGHTID, DB_VPN_LOCAL_CERT)
+            elif DB_VPN_AUTH_MODE == 'psk':
+                VPN_IPSEC_SECRETS_RULES += '\"{}\" : PSK {}\n'.format(DB_VPN_RIGHTID, DB_VPN_PSK)
+            else:
+                pass
+
+        # genVpnConf(VPN_IPSEC_CONF_RULES)
+        # _cmd = '/usr/sbin/update-rc.d -f ipsec defaults'
+        # os.system(_cmd)
+
+    ''' SNMP agent setting '''
+    ''''''
+
+    ''' OpenVPN setting '''
+    DB_OPENVPN_EN = cur.execute("select active from openvpn").fetchone()[0]
+    if DB_OPENVPN_EN == 1:
+        DB_OPENVPN_CONF = cur.execute("select conf from openvpn").fetchone()[0]
+
+        if not os.path.exists(os.environ['SYS_OPENVPN_CONF_DIR']):
+            _cmd = 'mkdir -p {}'.format(os.environ['SYS_OPENVPN_CONF_DIR'])
+            os.system(_cmd)
+
+        _cmd = 'rm -f {}/*'.format(os.environ['SYS_OPENVPN_CONF_DIR'])
+        os.system(_cmd)
+        _cmd = 'cp -f {}/{} {}'.format(os.environ['MLB_OPENVPN_CONF_DIR'],
+                                       DB_OPENVPN_CONF,
+                                       os.environ['SYS_OPENVPN_CONF_DIR'])
+        os.system(_cmd)
+        _cmd = '/usr/sbin/update-rc.d -f openvpn defaults'
+        # os.system(_cmd)
+
+    else:
+        pass
+        _cmd = '/usr/sbin/update-rc.d -f openvpn remove'
+        # os.system(_cmd)
+
     con.close()
+
+    ''' Generate iptables config file. '''
+    _cmd = '/usr/bin/python gen-iptables-rules.py'
+    # os.system(_cmd)
 
 
 if __name__ == '__main__':
