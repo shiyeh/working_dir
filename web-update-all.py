@@ -10,13 +10,13 @@ log = logging.getLogger(__name__)
 
 
 def genVpnConf(VPN_IPSEC_CONF_RULES):
-    # vpnConfPath = os.environ['MLB_VPN_CFG_PATH']
-    vpnConfPath = '/tmp/vpn_conf'
+    # _vpnConfPath = os.environ['MLB_VPN_CFG_PATH']
+    _vpnConfPath = '/tmp/vpn_conf'
 
     # Generate /opt/mlis/conf/ipsec.conf file
-    with open(vpnConfPath, 'w+') as f:
+    with open(_vpnConfPath, 'w+') as f:
         tmp = '#!/bin/sh\n'
-        tmp += '# Begin ' + vpnConfPath + '\n'
+        tmp += '# Begin ' + _vpnConfPath + '\n'
         tmp += '# ipsec.conf - strongSwan IPsec configuration file\n'
         tmp += '\n'
         tmp += '# basic configuration\n'
@@ -32,20 +32,20 @@ def genVpnConf(VPN_IPSEC_CONF_RULES):
         tmp += '        keyingtries=%forever\n'
         tmp += '\n'
         tmp += VPN_IPSEC_CONF_RULES
-        tmp += '# End {}\n'.format(vpnConfPath)
+        tmp += '# End {}\n'.format(_vpnConfPath)
 
         f.write(tmp)
 
 
 def genApnConf(PRISIM, BCKINGSIM, DB_APN, DB_USR_NAME, DB_PASS_WRD,
                DB_2ND_APN, DB_2ND_USR_NAME, DB_2ND_PASS_WRD):
-    # apnConfPath = os.environ['MLB_PPP_APN_OPT_PATH']
-    apnConfPath = '/tmp/apn_opt'
+    # _apnConfPath = os.environ['MLB_PPP_APN_OPT_PATH']
+    _apnConfPath = '/tmp/apn_opt'
 
     # Generate /opt/mlis/conf/apn_opt file
-    with open(apnConfPath, 'w+') as f:
+    with open(_apnConfPath, 'w+') as f:
         tmp = '#!/bin/sh\n'
-        tmp += '# Begin ' + apnConfPath + '\n'
+        tmp += '# Begin ' + _apnConfPath + '\n'
         tmp += 'export MLBPRISIM=\"' + 'sim{}\"\n'.format(PRISIM)
         tmp += 'export MLBBCKSIM=\"' + 'sim{}\"\n'.format(BCKINGSIM)
         tmp += '\n'
@@ -58,7 +58,7 @@ def genApnConf(PRISIM, BCKINGSIM, DB_APN, DB_USR_NAME, DB_PASS_WRD,
         tmp += 'export MLBUSRNAME2={}\n'.format(DB_2ND_USR_NAME)
         tmp += 'export MLBPASSWORD2={}\n'.format(DB_2ND_PASS_WRD)
         tmp += '\n'
-        tmp += '# End {}\n'.format(apnConfPath)
+        tmp += '# End {}\n'.format(_apnConfPath)
 
         f.write(tmp)
 
@@ -66,12 +66,12 @@ def genApnConf(PRISIM, BCKINGSIM, DB_APN, DB_USR_NAME, DB_PASS_WRD,
 def genDhcpdConf(DHCPD_IP_START, DHCPD_IP_END, DHCP_STATIC_LEASE,
                  DB_DHCP_IP_DNS, DB_DHCP_IP_SEC_DNS, DHCP_IP_SUBMASK,
                  IF_ADDR_IP, DHCP_CLIENT_TIME):
-    # dhcpdConfPath = os.environ['SYS_DIR'] + '/' + os.environ['MLB_DHCP_CFG']
-    dhcpdConfPath = '/tmp/dhcpdConfPath'
+    # _dhcpdConfPath = os.environ['SYS_DIR'] + '/' + os.environ['MLB_DHCP_CFG']
+    _dhcpdConfPath = '/tmp/dhcpdConfPath'
 
     # Generate /etc/udhcpd.conf file
-    with open(dhcpdConfPath, 'w+') as f:
-        tmp = '# Begin {}\n'.format(dhcpdConfPath)
+    with open(_dhcpdConfPath, 'w+') as f:
+        tmp = '# Begin {}\n'.format(_dhcpdConfPath)
         tmp += '# The start and end of the IP lease block\n'
         tmp += 'start       {}\n'.format(DHCPD_IP_START)
         tmp += 'end         {}\n'.format(DHCPD_IP_END)
@@ -93,20 +93,20 @@ def genDhcpdConf(DHCPD_IP_START, DHCPD_IP_END, DHCP_STATIC_LEASE,
         tmp += 'option      0x08    01020304 # option 8: "cookie server IP addr: 1.2.3.4"\n'
         tmp += '# The location of the leases file\n'
         tmp += 'lease_file     /var/lib/misc/udhcpd.leases\n\n'
-        tmp += '# End {}\n'.format(dhcpdConfPath)
+        tmp += '# End {}\n'.format(_dhcpdConfPath)
 
         f.write(tmp)
 
 
-def genNetifConf(IF_ADDR_IP, IF_MASK_STR,
+def genNetIfConf(IF_ADDR_IP, IF_MASK_STR,
                  IF_NETWORK, IF_BROADCAST):
-    # netInterfacePath = os.environ['SYS_NETWORK_DIR'] + '/' + os.environ['MLB_NETWORK_IFACES']
-    netInterfacePath = '/tmp/pawwwwwthhhh'
-    # print netInterfacePath
+    # _netIfPath = os.environ['SYS_NETWORK_DIR'] + '/' + os.environ['MLB_NETWORK_IFACES']
+    _netIfPath = '/tmp/pawwwwwthhhh'
+    # print _netIfPath
 
     # Generate /etc/network/interfaces file
-    with open(netInterfacePath, 'w+') as f:
-        tmp = '# Begin ' + netInterfacePath + '\n'
+    with open(_netIfPath, 'w+') as f:
+        tmp = '# Begin ' + _netIfPath + '\n'
         tmp += '# The loopback interface\n'
         tmp += 'auto lo\n'
         tmp += 'iface lo inet loopback\n'
@@ -118,7 +118,7 @@ def genNetifConf(IF_ADDR_IP, IF_MASK_STR,
         tmp += '    network     {}\n'.format(IF_NETWORK)
         tmp += '    broadcast   {}\n'.format(IF_BROADCAST)
         tmp += '\niface wwan1 inet dhcp\n'
-        tmp += '# End {}\n'.format(netInterfacePath)
+        tmp += '# End {}\n'.format(_netIfPath)
 
         f.write(tmp)
 
@@ -157,7 +157,7 @@ def main():
     # print 'IF_NETWORK=',IF_NETWORK
     # print 'IF_BROADCAST=',IF_BROADCAST
 
-    genNetifConf(IF_ADDR_IP, IF_MASK_STR,
+    genNetIfConf(IF_ADDR_IP, IF_MASK_STR,
                  IF_NETWORK, IF_BROADCAST)
 
     ''' DHCP SEVER configuration. '''
@@ -332,7 +332,6 @@ def main():
         os.system(_cmd)
         _cmd = '/usr/sbin/update-rc.d -f openvpn defaults'
         # os.system(_cmd)
-
     else:
         pass
         _cmd = '/usr/sbin/update-rc.d -f openvpn remove'
