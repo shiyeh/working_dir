@@ -15,26 +15,30 @@ def genVpnConf(VPN_IPSEC_CONF_RULES):
 
     # Generate /opt/mlis/conf/ipsec.conf file
     with open(_vpnConfPath, 'w+') as f:
-        tmp = '#!/bin/sh\n'
-        tmp += '# Begin ' + _vpnConfPath + '\n'
-        tmp += '# ipsec.conf - strongSwan IPsec configuration file\n'
-        tmp += '\n'
-        tmp += '# basic configuration\n'
-        tmp += '\n'
-        tmp += 'config setup\n'
-        tmp += '        # strictcrlpolicy=yes\n'
-        tmp += '        # uniqueids = no\n'
-        tmp += '\n'
-        tmp += '# Add connections here.\n'
-        tmp += '\n'
-        tmp += 'conn %default\n'
-        tmp += '        mobike=no\n'
-        tmp += '        keyingtries=%forever\n'
-        tmp += '\n'
-        tmp += VPN_IPSEC_CONF_RULES
-        tmp += '# End {}\n'.format(_vpnConfPath)
+        _tmp = '#!/bin/sh\n'
+        _tmp += '# Begin ' + _vpnConfPath + '\n'
+        _tmp += '# ipsec.conf - strongSwan IPsec configuration file\n'
+        _tmp += '\n'
+        _tmp += '# basic configuration\n'
+        _tmp += '\n'
+        _tmp += 'config setup\n'
+        _tmp += '        # strictcrlpolicy=yes\n'
+        _tmp += '        # uniqueids = no\n'
+        _tmp += '\n'
+        _tmp += '# Add connections here.\n'
+        _tmp += '\n'
+        _tmp += 'conn %default\n'
+        _tmp += '        mobike=no\n'
+        _tmp += '        keyingtries=%forever\n'
+        _tmp += '\n'
+        _tmp += VPN_IPSEC_CONF_RULES
+        _tmp += '# End {}\n'.format(_vpnConfPath)
 
-        f.write(tmp)
+        f.write(_tmp)
+
+
+def genSnmpConf():
+    pass
 
 
 def genApnConf(PRISIM, BCKINGSIM, DB_APN, DB_USR_NAME, DB_PASS_WRD,
@@ -43,24 +47,31 @@ def genApnConf(PRISIM, BCKINGSIM, DB_APN, DB_USR_NAME, DB_PASS_WRD,
     _apnConfPath = '/tmp/apn_opt'
 
     # Generate /opt/mlis/conf/apn_opt file
-    with open(_apnConfPath, 'w+') as f:
-        tmp = '#!/bin/sh\n'
-        tmp += '# Begin ' + _apnConfPath + '\n'
-        tmp += 'export MLBPRISIM=\"' + 'sim{}\"\n'.format(PRISIM)
-        tmp += 'export MLBBCKSIM=\"' + 'sim{}\"\n'.format(BCKINGSIM)
-        tmp += '\n'
-        tmp += 'export MLBAPN1={}\n'.format(DB_APN)
-        tmp += 'export MLBPDPYTPE1=ip\n'
-        tmp += 'export MLBUSRNAME1={}\n'.format(DB_USR_NAME)
-        tmp += 'export MLBPASSWORD1={}\n'.format(DB_PASS_WRD)
-        tmp += 'export MLBAPN2={}\n'.format(DB_2ND_APN)
-        tmp += 'export MLBPDPYTPE2=ip\n'
-        tmp += 'export MLBUSRNAME2={}\n'.format(DB_2ND_USR_NAME)
-        tmp += 'export MLBPASSWORD2={}\n'.format(DB_2ND_PASS_WRD)
-        tmp += '\n'
-        tmp += '# End {}\n'.format(_apnConfPath)
+    try:
+        with open(_apnConfPath, 'w+') as f:
+            _tmp = '#!/bin/sh\n'
+            _tmp += '# Begin ' + _apnConfPath + '\n'
+            _tmp += 'export MLBPRISIM=\"' + 'sim{}\"\n'.format(PRISIM)
+            _tmp += 'export MLBBCKSIM=\"' + 'sim{}\"\n'.format(BCKINGSIM)
+            _tmp += '\n'
+            _tmp += 'export MLBAPN1={}\n'.format(DB_APN)
+            _tmp += 'export MLBPDPYTPE1=ip\n'
+            _tmp += 'export MLBUSRNAME1={}\n'.format(DB_USR_NAME)
+            _tmp += 'export MLBPASSWORD1={}\n'.format(DB_PASS_WRD)
+            _tmp += 'export MLBAPN2={}\n'.format(DB_2ND_APN)
+            _tmp += 'export MLBPDPYTPE2=ip\n'
+            _tmp += 'export MLBUSRNAME2={}\n'.format(DB_2ND_USR_NAME)
+            _tmp += 'export MLBPASSWORD2={}\n'.format(DB_2ND_PASS_WRD)
+            _tmp += '\n'
+            _tmp += '# End {}\n'.format(_apnConfPath)
 
-        f.write(tmp)
+            f.write(_tmp)
+    except Exception as e:
+        log.exception(e)
+    else:
+        return 0
+    finally:
+        f.close()
 
 
 def genDhcpdConf(DHCPD_IP_START, DHCPD_IP_END, DHCP_STATIC_LEASE,
@@ -70,32 +81,39 @@ def genDhcpdConf(DHCPD_IP_START, DHCPD_IP_END, DHCP_STATIC_LEASE,
     _dhcpdConfPath = '/tmp/dhcpdConfPath'
 
     # Generate /etc/udhcpd.conf file
-    with open(_dhcpdConfPath, 'w+') as f:
-        tmp = '# Begin {}\n'.format(_dhcpdConfPath)
-        tmp += '# The start and end of the IP lease block\n'
-        tmp += 'start       {}\n'.format(DHCPD_IP_START)
-        tmp += 'end         {}\n'.format(DHCPD_IP_END)
-        tmp += '# The interface that udhcpd will use\n'
-        tmp += 'interface {}\n'.format(os.environ['DHCPD_USED_IF'])
-        tmp += '# The location of the pid file\n'
-        tmp += 'pidfile     /var/run/udhcpd.pid\n\n'
-        tmp += '# Static leases map\n'
-        tmp += '{}\n\n'.format(DHCP_STATIC_LEASE)
-        tmp += '''# The remainder of options are DHCP options and can be specified with the
+    try:
+        with open(_dhcpdConfPath, 'w+') as f:
+            _tmp = '# Begin {}\n'.format(_dhcpdConfPath)
+            _tmp += '# The start and end of the IP lease block\n'
+            _tmp += 'start       {}\n'.format(DHCPD_IP_START)
+            _tmp += 'end         {}\n'.format(DHCPD_IP_END)
+            _tmp += '# The interface that udhcpd will use\n'
+            _tmp += 'interface {}\n'.format(os.environ['DHCPD_USED_IF'])
+            _tmp += '# The location of the pid file\n'
+            _tmp += 'pidfile     /var/run/udhcpd.pid\n\n'
+            _tmp += '# Static leases map\n'
+            _tmp += '{}\n\n'.format(DHCP_STATIC_LEASE)
+            _tmp += '''# The remainder of options are DHCP options and can be specified with the
 # keyword 'opt' or 'option'. If an option can take multiple items, such
 # as the dns option, they can be listed on the same line, or multiple
 # lines.\n'''
-        tmp += 'opt         dns     {} {} #public google dns servers\n'.format(DB_DHCP_IP_DNS, DB_DHCP_IP_SEC_DNS)
-        tmp += 'option      subnet  {}\n'.format(DHCP_IP_SUBMASK)
-        tmp += 'opt         router  {}\n'.format(IF_ADDR_IP)
-        tmp += 'option      lease   {} # default: 10 days\n'.format(DHCP_CLIENT_TIME)
-        tmp += '# Arbitrary option in hex form:\n'
-        tmp += 'option      0x08    01020304 # option 8: "cookie server IP addr: 1.2.3.4"\n'
-        tmp += '# The location of the leases file\n'
-        tmp += 'lease_file     /var/lib/misc/udhcpd.leases\n\n'
-        tmp += '# End {}\n'.format(_dhcpdConfPath)
+            _tmp += 'opt         dns     {} {} #public google dns servers\n'.format(DB_DHCP_IP_DNS, DB_DHCP_IP_SEC_DNS)
+            _tmp += 'option      subnet  {}\n'.format(DHCP_IP_SUBMASK)
+            _tmp += 'opt         router  {}\n'.format(IF_ADDR_IP)
+            _tmp += 'option      lease   {} # default: 10 days\n'.format(DHCP_CLIENT_TIME)
+            _tmp += '# Arbitrary option in hex form:\n'
+            _tmp += 'option      0x08    01020304 # option 8: "cookie server IP addr: 1.2.3.4"\n'
+            _tmp += '# The location of the leases file\n'
+            _tmp += 'lease_file     /var/lib/misc/udhcpd.leases\n\n'
+            _tmp += '# End {}\n'.format(_dhcpdConfPath)
 
-        f.write(tmp)
+            f.write(_tmp)
+    except Exception as e:
+        log.exception(e)
+    else:
+        return 0
+    finally:
+        f.close()
 
 
 def genNetIfConf(IF_ADDR_IP, IF_MASK_STR,
@@ -105,22 +123,29 @@ def genNetIfConf(IF_ADDR_IP, IF_MASK_STR,
     # print _netIfPath
 
     # Generate /etc/network/interfaces file
-    with open(_netIfPath, 'w+') as f:
-        tmp = '# Begin ' + _netIfPath + '\n'
-        tmp += '# The loopback interface\n'
-        tmp += 'auto lo\n'
-        tmp += 'iface lo inet loopback\n'
-        tmp += '\n# Wired interfaces\n'
-        tmp += 'auto eth0\n'
-        tmp += 'iface eth0 inet static\n'
-        tmp += '    address     {}\n'.format(IF_ADDR_IP)
-        tmp += '    netmask     {}\n'.format(IF_MASK_STR)
-        tmp += '    network     {}\n'.format(IF_NETWORK)
-        tmp += '    broadcast   {}\n'.format(IF_BROADCAST)
-        tmp += '\niface wwan1 inet dhcp\n'
-        tmp += '# End {}\n'.format(_netIfPath)
+    try:
+        with open(_netIfPath, 'w+') as f:
+            _tmp = '# Begin ' + _netIfPath + '\n'
+            _tmp += '# The loopback interface\n'
+            _tmp += 'auto lo\n'
+            _tmp += 'iface lo inet loopback\n'
+            _tmp += '\n# Wired interfaces\n'
+            _tmp += 'auto eth0\n'
+            _tmp += 'iface eth0 inet static\n'
+            _tmp += '    address     {}\n'.format(IF_ADDR_IP)
+            _tmp += '    netmask     {}\n'.format(IF_MASK_STR)
+            _tmp += '    network     {}\n'.format(IF_NETWORK)
+            _tmp += '    broadcast   {}\n'.format(IF_BROADCAST)
+            _tmp += '\niface wwan1 inet dhcp\n'
+            _tmp += '# End {}\n'.format(_netIfPath)
 
-        f.write(tmp)
+            f.write(_tmp)
+    except Exception as e:
+        log.error(e)
+    else:
+        return 0
+    finally:
+        f.close()
 
 
 def mask2CIDR(submask):
@@ -157,8 +182,9 @@ def main():
     # print 'IF_NETWORK=',IF_NETWORK
     # print 'IF_BROADCAST=',IF_BROADCAST
 
-    genNetIfConf(IF_ADDR_IP, IF_MASK_STR,
-                 IF_NETWORK, IF_BROADCAST)
+    if genNetIfConf(IF_ADDR_IP, IF_MASK_STR,
+                    IF_NETWORK, IF_BROADCAST) != 0:
+        log.debug('genNetIfConf() generate failed !')
 
     ''' DHCP SEVER configuration. '''
     DB_DHCP_EN = cur.execute("select dhcp_server from dhcp_server").fetchone()[0]
@@ -199,9 +225,10 @@ def main():
         # _cmd = '/usr/sbin/update-rc.d -f udhcpd remove'
         # os.system(_cmd)
 
-    genDhcpdConf(DHCPD_IP_START, DHCPD_IP_END, DHCP_STATIC_LEASE,
-                 DB_DHCP_IP_DNS, DB_DHCP_IP_SEC_DNS, DHCP_IP_SUBMASK,
-                 IF_ADDR_IP, DHCP_CLIENT_TIME)
+    if genDhcpdConf(DHCPD_IP_START, DHCPD_IP_END, DHCP_STATIC_LEASE,
+                    DB_DHCP_IP_DNS, DB_DHCP_IP_SEC_DNS, DHCP_IP_SUBMASK,
+                    IF_ADDR_IP, DHCP_CLIENT_TIME) != 0:
+        log.debug('genDhcpdConf() generate failed !')
 
     ''' MODEM INTERNET CONNECTION setting. '''
     PRISIM = cur.execute("select priority from wan_priority_setting where id=1;").fetchone()[0]
@@ -220,8 +247,9 @@ def main():
     DB_2ND_USR_NAME = cur.execute("select username from wan_setting where id=(?);", (BCKINGSIM,)).fetchone()[0]
     DB_2ND_PASS_WRD = cur.execute("select password from wan_setting where id=(?);", (BCKINGSIM,)).fetchone()[0]
 
-    genApnConf(PRISIM, BCKINGSIM, DB_APN, DB_USR_NAME, DB_PASS_WRD,
-               DB_2ND_APN, DB_2ND_USR_NAME, DB_2ND_PASS_WRD)
+    if genApnConf(PRISIM, BCKINGSIM, DB_APN, DB_USR_NAME, DB_PASS_WRD,
+                  DB_2ND_APN, DB_2ND_USR_NAME, DB_2ND_PASS_WRD) != 0:
+        log.debug('genApnConf() generate failed !')
 
     with open(os.environ['MLB_QMI_APN_OPT_PATH'], 'w+') as f:
         f.write('APN={}\n'.format(DB_APN))
@@ -313,7 +341,44 @@ def main():
         # os.system(_cmd)
 
     ''' SNMP agent setting '''
-    ''''''
+    DB_SNMP_EN = cur.execute("select active from snmp_agent").fetchone()[0]
+    if DB_SNMP_EN == 1:
+        DB_SNMP_AC = ''
+        ref = 0
+        DB_SNMP_READ_COMMUNITY = cur.execute("select read_community from snmp_agent").fetchone()[0]
+        DB_SNMP_WRITE_COMMUNITY = cur.execute("select write_community from snmp_agent").fetchone()[0]
+        DB_SNMP_AGENT_VER = cur.execute("select agent_ver from snmp_agent").fetchone()[0]
+        if DB_SNMP_AGENT_VER > 1:
+            ref += 4
+        else:
+            ref += 0
+
+        DB_SNMP_AUTH_PROTO = cur.execute("select auth_protocol from snmp_agent").fetchone()[0]
+        if DB_SNMP_AUTH_PROTO > 0:
+            ref += 2
+        else:
+            ref += 0
+        if DB_SNMP_AUTH_PROTO == 0:
+            DB_SNMP_AUTH_PROTO = ''
+        elif DB_SNMP_AUTH_PROTO == 1:
+            DB_SNMP_AUTH_PROTO = 'MD5'
+        elif DB_SNMP_AUTH_PROTO == 2:
+            DB_SNMP_AUTH_PROTO = 'SHA'
+        else:
+            pass
+
+        if not os.path.exists(os.environ['SYS_SNMP_CFG_DIR']):
+            _cmd = 'mkdir -p {}'.format(os.environ['SYS_SNMP_CFG_DIR'])
+            os.system(_cmd)
+
+        genSnmpConf()
+
+        os.system(_cmd)
+        _cmd = '/usr/sbin/update-rc.d -f snmpd defaults'
+        # os.system(_cmd)
+    else:
+        _cmd = '/usr/sbin/update-rc.d -f snmpd remove'
+        # os.system(_cmd)
 
     ''' OpenVPN setting '''
     DB_OPENVPN_EN = cur.execute("select active from openvpn").fetchone()[0]
