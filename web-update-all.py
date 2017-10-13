@@ -345,6 +345,7 @@ def main():
     if DB_SNMP_EN == 1:
         DB_SNMP_AC = ''
         ref = 0
+
         DB_SNMP_READ_COMMUNITY = cur.execute("select read_community from snmp_agent").fetchone()[0]
         DB_SNMP_WRITE_COMMUNITY = cur.execute("select write_community from snmp_agent").fetchone()[0]
         DB_SNMP_AGENT_VER = cur.execute("select agent_ver from snmp_agent").fetchone()[0]
@@ -360,12 +361,23 @@ def main():
             ref += 0
         if DB_SNMP_AUTH_PROTO == 0:
             DB_SNMP_AUTH_PROTO = ''
-        elif DB_SNMP_AUTH_PROTO == 1:
+        if DB_SNMP_AUTH_PROTO == 1:
             DB_SNMP_AUTH_PROTO = 'MD5'
-        elif DB_SNMP_AUTH_PROTO == 2:
+        if DB_SNMP_AUTH_PROTO == 2:
             DB_SNMP_AUTH_PROTO = 'SHA'
+
+        DB_SNMP_AUTH_KEY = cur.execute("select auth_key from snmp_agent").fetchone()[0]
+        DB_SNMP_PRIV_PROTO = cur.execute("select priv_protocol from snmp_agent").fetchone()[0]
+        if DB_SNMP_PRIV_PROTO > 0:
+            ref += 1
         else:
-            pass
+            ref += 0
+        if DB_SNMP_PRIV_PROTO == 0:
+            DB_SNMP_PRIV_PROTO = ''
+        if DB_SNMP_PRIV_PROTO == 1:
+            DB_SNMP_PRIV_PROTO = 'DES'
+        if DB_SNMP_PRIV_PROTO == 2:
+            DB_SNMP_PRIV_PROTO = 'AES'
 
         if not os.path.exists(os.environ['SYS_SNMP_CFG_DIR']):
             _cmd = 'mkdir -p {}'.format(os.environ['SYS_SNMP_CFG_DIR'])
