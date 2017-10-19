@@ -28,12 +28,8 @@ vmnet1: in B/S
 
 import time
 import sys
-
-# INTERVAL = 3            # seconds
-# AVG_LOW_PASS = 0.2      # Simple Complemetary Filter
-
-# nicFile = "/proc/net/dev"
-# nicName = "ens33"
+import os
+import sqlite3
 
 
 def printHelp():
@@ -48,22 +44,52 @@ $ python {0} eth0
     sys.exit(1)
 
 
+def updateTraffic(tx_bytes, rx_bytes):
+    con = sqlite3.connect(WEB_APP_DB_PATH)
+    cur = con.cursor()
+    lastRowID = cur.execute("select max(id) from traffic;").fetchone()[0]
+    print 'lastRowID=', lastRowID
+    cur.execute("update traffic set tx=(?), rx=(?) WHERE ID = (?);", (tx_bytes, rx_bytes, lastRowID))
+    con.commit()
+    con.close()
+
+
+def insertTraffic(tx_bytes, rx_bytes):
+    con = sqlite3.connect(WEB_APP_DB_PATH)
+    cur = con.cursor()
+    lastRowID = cur.execute("select max(id) from traffic;").fetchone()[0]
+    cur.execute("insert into traffic(ID,tx,rx) values(?,?,?);", (lastRowID+1, tx_bytes, rx_bytes))
+    con.commit()
+    con.close()
+
+
+def queryLastTraffic():
+    con = sqlite3.connect(WEB_APP_DB_PATH)
+    cur = con.cursor()
+    lastRowID = cur.execute("select max(id) from traffic;").fetchone()[0]
+    lastTx = cur.execute("select * from traffic where id=(?)", (lastRowID,)).fetchone()[1]
+    lastRx = cur.execute("select * from traffic where id=(?)", (lastRowID,)).fetchone()[2]
+    con.close()
+
+    return int(lastTx), int(lastRx)
+
+
 def getNetworkInterfaces():
     ifaces = []
     with open(nicFile) as f:
         data = f.read()
 
     data = data.split("\n")[2:]
-    print data
+    # print data
     # print '*******'
 
     # if not sys.arD! {}'.format(sys.argv[1])
 
-    for i in data:
-        if i.find(sys.argv[1]) > 0:
-            pass
-        else:
-            data.remove(i)
+    # for i in data:
+    #     if i.find(sys.argv[1]) > 0:
+    #         pass
+    #     else:
+    #         data.remove(i)
 
     # print 'data=', data
 
@@ -118,6 +144,9 @@ def main():
             "recvbytes": eth["rx"]["bytes"]
         }
 
+    initTime = time.time()
+    lastTx, lastRx = queryLastTraffic()
+
     while True:
         idata = getNetworkInterfaces()
         for eth in idata:
@@ -144,22 +173,47 @@ def main():
             # print "\tRX - MAX: %s AVG: %s CUR: %s" % (ifaces[eth["interface"]]["toprx"], ifaces[eth["interface"]]["avgrx"], ifaces[eth["interface"]]["rxrate"])
             # print "\tTX - MAX: %s AVG: %s CUR: %s" % (ifaces[eth["interface"]]["toptx"], ifaces[eth["interface"]]["avgtx"], ifaces[eth["interface"]]["txrate"])
 
-            print "{}:".format(eth["interface"])
-            print "  RX - recvbytes: {} bytes".format(ifaces[eth["interface"]]["recvbytes"])
-            print "  TX - sendbytes: {} bytes".format(ifaces[eth["interface"]]["sendbytes"])
-            print ""
+            # print "{}:".format(eth["interface"])
+            # print "  RX - recvbytes: {} bytes".format(ifaces[eth["interface"]]["recvbytes"])
+            # print "  TX - sendbytes: {} bytes".format(ifaces[eth["interface"]]["sendbytes"])
+            # print ""
+
+            if eth["interface"] == wanInterface:
+                print 'This is {}.'.format(eth["interface"])
+                updateTraffic(ifaces[eth["interface"]]["sendbytes"]+lastTx,
+                              ifaces[eth["interface"]]["recvbytes"]+lastRx,
+                              )
+
+                currTime = time.time()
+                timeInterval = currTime - initTime
+                if timeInterval >= record_intvl:
+                    insertTraffic(ifaces[eth["interface"]]["sendbytes"]+lastTx,
+                                  ifaces[eth["interface"]]["recvbytes"]+lastRx,
+                                  )
+                    initTime = time.time()
+
+                # lastTx, lastRx = queryDB()
+            # else:
+            #     print('Can not found NIC: {}'.format(wanInterface))
+            #     print('Please check your NIC name.')
+
         time.sleep(INTERVAL)
 
 
 if __name__ == '__main__':
-    INTERVAL = 3            # seconds
+    INTERVAL = 5            # seconds
     AVG_LOW_PASS = 0.2      # Simple Complemetary Filter
 
     nicFile = "/proc/net/dev"
+    wanInterface = 'ens33'
+    WEB_APP_DB_PATH = '/tmp/example.db'
 
-    if len(sys.argv) == 2:
-        if '--help' == sys.argv[1]:
-            printHelp()
+    # When every 'record_intvl' seconds, insert new data to the table.
+    record_intvl = 10
+
+    # if len(sys.argv) == 2:
+    #     if '--help' == sys.argv[1]:
+    #         printHelp()
 
     # Monitor loop
     main()
