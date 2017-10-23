@@ -74,6 +74,21 @@ def queryLastTraffic():
     return int(lastTx), int(lastRx)
 
 
+def resetTable():
+    con = sqlite3.connect(WEB_APP_DB_PATH)
+    cur = con.cursor()
+    try:
+        cur.execute("drop table traffic;")
+        cur.execute("create table traffic(id, tx, rx);")
+        cur.execute("insert into traffic(id, tx, rx) values(0, 0, 0);")
+    except Exception as e:
+        raise e
+    else:
+        con.commit()
+        con.close()
+        return 0
+
+
 def getNetworkInterfaces():
     ifaces = []
     with open(nicFile) as f:
@@ -145,6 +160,18 @@ def main():
         }
 
     initTime = time.time()
+
+    con = sqlite3.connect(WEB_APP_DB_PATH)
+    cur = con.cursor()
+    lastRowID = cur.execute("select max(id) from traffic;").fetchone()[0]
+    if lastRowID == 0:
+        cur.execute("insert into traffic(id, tx, rx) values(?, 0, 0);", (lastRowID+1,))
+    else:
+        lastTx, lastRx = queryLastTraffic()
+        cur.execute("insert into traffic(id, tx, rx) values(?, ?, ?);", (lastRowID+1, lastTx, lastRx))
+    con.commit()
+    con.close()
+
     lastTx, lastRx = queryLastTraffic()
 
     while True:
@@ -178,6 +205,7 @@ def main():
             # print "  TX - sendbytes: {} bytes".format(ifaces[eth["interface"]]["sendbytes"])
             # print ""
 
+            ''' Calculate all tx/rx bytes '''
             if eth["interface"] == wanInterface:
                 print 'This is {}.'.format(eth["interface"])
                 updateTraffic(ifaces[eth["interface"]]["sendbytes"]+lastTx,
@@ -211,9 +239,9 @@ if __name__ == '__main__':
     # When every 'record_intvl' seconds, insert new data to the table.
     record_intvl = 10
 
-    # if len(sys.argv) == 2:
-    #     if '--help' == sys.argv[1]:
-    #         printHelp()
+    if len(sys.argv) == 2 and sys.argv[1] == 'reset':
+        if resetTable() == 0:
+            print 'Reset table...'
+            sys.exit(0)
 
-    # Monitor loop
     main()
