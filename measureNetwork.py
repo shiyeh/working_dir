@@ -49,7 +49,10 @@ def updateTraffic(tx_bytes, rx_bytes):
     cur = con.cursor()
     lastRowID = cur.execute("select max(id) from traffic;").fetchone()[0]
     print 'lastRowID=', lastRowID
-    cur.execute("update traffic set tx=(?), rx=(?) WHERE ID = (?);", (tx_bytes, rx_bytes, lastRowID))
+    nowTime = time.asctime(time.localtime(time.time()))
+    print nowTime
+    cur.execute("update traffic set tx=(?), rx=(?), nowTime=(?) where id=(?);", (
+                tx_bytes, rx_bytes, nowTime, lastRowID))
     con.commit()
     con.close()
 
@@ -58,7 +61,9 @@ def insertTraffic(tx_bytes, rx_bytes):
     con = sqlite3.connect(WEB_APP_DB_PATH)
     cur = con.cursor()
     lastRowID = cur.execute("select max(id) from traffic;").fetchone()[0]
-    cur.execute("insert into traffic(ID,tx,rx) values(?,?,?);", (lastRowID+1, tx_bytes, rx_bytes))
+    nowTime = time.asctime(time.localtime(time.time()))
+    cur.execute("insert into traffic(ID,tx,rx,nowTime) values(?,?,?,?);", (
+                lastRowID+1, tx_bytes, rx_bytes, nowTime))
     con.commit()
     con.close()
 
@@ -79,8 +84,8 @@ def resetTable():
     cur = con.cursor()
     try:
         cur.execute("drop table traffic;")
-        cur.execute("create table traffic(id, tx, rx);")
-        cur.execute("insert into traffic(id, tx, rx) values(0, 0, 0);")
+        cur.execute("create table traffic(id INT primary key NOT NULL, tx INT NOT NULL, rx INT NOT NULL, nowTime TEXT);")
+        cur.execute("insert into traffic(id, tx, rx, nowTime) values(0, 0, 0, 0);")
     except Exception as e:
         raise e
     else:
@@ -161,16 +166,16 @@ def main():
 
     initTime = time.time()
 
-    con = sqlite3.connect(WEB_APP_DB_PATH)
-    cur = con.cursor()
-    lastRowID = cur.execute("select max(id) from traffic;").fetchone()[0]
-    if lastRowID == 0:
-        cur.execute("insert into traffic(id, tx, rx) values(?, 0, 0);", (lastRowID+1,))
-    else:
-        lastTx, lastRx = queryLastTraffic()
-        cur.execute("insert into traffic(id, tx, rx) values(?, ?, ?);", (lastRowID+1, lastTx, lastRx))
-    con.commit()
-    con.close()
+    # con = sqlite3.connect(WEB_APP_DB_PATH)
+    # cur = con.cursor()
+    # lastRowID = cur.execute("select max(id) from traffic;").fetchone()[0]
+    # if lastRowID == 0:
+    #     cur.execute("insert into traffic(id, tx, rx) values(?, 0, 0);", (lastRowID+1,))
+    # else:
+    #     lastTx, lastRx = queryLastTraffic()
+    #     cur.execute("insert into traffic(id, tx, rx) values(?, ?, ?);", (lastRowID+1, lastTx, lastRx))
+    # con.commit()
+    # con.close()
 
     lastTx, lastRx = queryLastTraffic()
 
@@ -220,7 +225,6 @@ def main():
                                   )
                     initTime = time.time()
 
-                # lastTx, lastRx = queryDB()
             # else:
             #     print('Can not found NIC: {}'.format(wanInterface))
             #     print('Please check your NIC name.')
@@ -243,5 +247,9 @@ if __name__ == '__main__':
         if resetTable() == 0:
             print 'Reset table...'
             sys.exit(0)
+
+    if not os.path.exists(WEB_APP_DB_PATH):
+        print 'DB not found'
+        sys.exit(1)
 
     main()
