@@ -30,6 +30,7 @@ import time
 import sys
 import os
 import sqlite3
+import init_mlb_env
 
 
 def printHelp():
@@ -47,12 +48,13 @@ $ python {0} eth0
 def updateTraffic(tx_bytes, rx_bytes):
     con = sqlite3.connect(WEB_APP_DB_PATH)
     cur = con.cursor()
-    lastRowID = cur.execute("select max(id) from traffic;").fetchone()[0]
-    print 'lastRowID=', lastRowID
-    nowTime = time.asctime(time.localtime(time.time()))
-    print nowTime
-    cur.execute("update traffic set tx=(?), rx=(?), nowTime=(?) where id=(?);", (
-                tx_bytes, rx_bytes, nowTime, lastRowID))
+    lastRowID = cur.execute("SELECT MAX(id) FROM traffic;").fetchone()[0]
+    # cur.execute("update traffic set tx=(?), rx=(?), nowTime=(?) where id=(?);", (
+    #             tx_bytes, rx_bytes, nowTime, lastRowID))
+    cur.execute("UPDATE traffic SET tx=(?), rx=(?) WHERE id=(?);", (
+                tx_bytes, rx_bytes, lastRowID))
+    # cur.execute("UPDATE traffic SET tx=(?), rx=(?);", (
+    #             tx_bytes, rx_bytes))
     con.commit()
     con.close()
 
@@ -60,10 +62,10 @@ def updateTraffic(tx_bytes, rx_bytes):
 def insertTraffic(tx_bytes, rx_bytes):
     con = sqlite3.connect(WEB_APP_DB_PATH)
     cur = con.cursor()
-    lastRowID = cur.execute("select max(id) from traffic;").fetchone()[0]
-    nowTime = time.asctime(time.localtime(time.time()))
-    cur.execute("insert into traffic(ID,tx,rx,nowTime) values(?,?,?,?);", (
-                lastRowID+1, tx_bytes, rx_bytes, nowTime))
+    lastRowID = cur.execute("SELECT MAX(id) FROM traffic;").fetchone()[0]
+    # cur.execute("insert into traffic(ID,tx,rx,nowTime) values(?,?,?,?);", (
+    #             lastRowID+1, tx_bytes, rx_bytes, nowTime))
+    cur.execute("INSERT INTO traffic(tx, rx) VALUES(?, ?);", (tx_bytes, rx_bytes))
     con.commit()
     con.close()
 
@@ -71,9 +73,9 @@ def insertTraffic(tx_bytes, rx_bytes):
 def queryLastTraffic():
     con = sqlite3.connect(WEB_APP_DB_PATH)
     cur = con.cursor()
-    lastRowID = cur.execute("select max(id) from traffic;").fetchone()[0]
-    lastTx = cur.execute("select * from traffic where id=(?)", (lastRowID,)).fetchone()[1]
-    lastRx = cur.execute("select * from traffic where id=(?)", (lastRowID,)).fetchone()[2]
+    lastRowID = cur.execute("SELECT MAX(id) FROM traffic;").fetchone()[0]
+    lastTx = cur.execute("SELECT * FROM traffic WHERE id=(?)", (lastRowID,)).fetchone()[1]
+    lastRx = cur.execute("SELECT * FROM traffic WHERE id=(?)", (lastRowID,)).fetchone()[2]
     con.close()
 
     return int(lastTx), int(lastRx)
@@ -82,16 +84,16 @@ def queryLastTraffic():
 def resetTable():
     con = sqlite3.connect(WEB_APP_DB_PATH)
     cur = con.cursor()
-    try:
-        cur.execute("drop table traffic;")
-        cur.execute("create table traffic(id INT primary key NOT NULL, tx INT NOT NULL, rx INT NOT NULL, nowTime TEXT);")
-        cur.execute("insert into traffic(id, tx, rx, nowTime) values(0, 0, 0, 0);")
-    except Exception as e:
-        raise e
-    else:
-        con.commit()
-        con.close()
-        return 0
+    cur.execute("DROP TABLE IF EXISTS traffic;")
+    cur.execute("CREATE TABLE traffic(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, \
+tx INT NOT NULL, \
+rx INT NOT NULL, \
+sqltime TIMESTAMP DEFAULT (DATETIME(CURRENT_TIMESTAMP, 'LOCALTIME')) NOT NULL);")
+    cur.execute("INSERT INTO traffic(tx, rx) VALUES(0, 0);")
+    con.commit()
+    con.close()
+
+    return 0
 
 
 def getNetworkInterfaces():
@@ -205,12 +207,12 @@ def main():
             # print "\tRX - MAX: %s AVG: %s CUR: %s" % (ifaces[eth["interface"]]["toprx"], ifaces[eth["interface"]]["avgrx"], ifaces[eth["interface"]]["rxrate"])
             # print "\tTX - MAX: %s AVG: %s CUR: %s" % (ifaces[eth["interface"]]["toptx"], ifaces[eth["interface"]]["avgtx"], ifaces[eth["interface"]]["txrate"])
 
-            # print "{}:".format(eth["interface"])
-            # print "  RX - recvbytes: {} bytes".format(ifaces[eth["interface"]]["recvbytes"])
-            # print "  TX - sendbytes: {} bytes".format(ifaces[eth["interface"]]["sendbytes"])
-            # print ""
+            print "{}:".format(eth["interface"])
+            print "  RX - recvbytes: {} bytes".format(ifaces[eth["interface"]]["recvbytes"])
+            print "  TX - sendbytes: {} bytes".format(ifaces[eth["interface"]]["sendbytes"])
+            print ""
 
-            ''' Calculate all tx/rx bytes '''
+            ''' Insert/update all tx/rx bytes '''
             if eth["interface"] == wanInterface:
                 print 'This is {}.'.format(eth["interface"])
                 updateTraffic(ifaces[eth["interface"]]["sendbytes"]+lastTx,
@@ -225,10 +227,6 @@ def main():
                                   )
                     initTime = time.time()
 
-            # else:
-            #     print('Can not found NIC: {}'.format(wanInterface))
-            #     print('Please check your NIC name.')
-
         time.sleep(INTERVAL)
 
 
@@ -238,9 +236,11 @@ if __name__ == '__main__':
 
     nicFile = "/proc/net/dev"
     wanInterface = 'ens33'
-    WEB_APP_DB_PATH = '/tmp/example.db'
+    WEB_APP_DB_PATH = os.environ["WEB_APP_DBTMP_PATH"]
 
-    # When every 'record_intvl' seconds, insert new data to the table.
+    # Every 'record_intvl' seconds, insert new data to the table,
+    # default is 1 hour.
+    # record_intvl = 3600
     record_intvl = 10
 
     if len(sys.argv) == 2 and sys.argv[1] == 'reset':
