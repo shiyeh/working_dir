@@ -76,8 +76,6 @@ def main():
         log.error(e)
         cancelProcess()
 
-    # srcFile = '/tmp/' + fwFile.split()[0]  # Should be mlis.tar.gz
-    # md5File = '/tmp/' + fwFile.split()[1]  # Should be md5
     if not os.path.exists(SRCFILE) or not os.path.exists(MD5FILE):
         cancelProcess()
 
