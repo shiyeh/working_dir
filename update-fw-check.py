@@ -103,6 +103,6 @@ def main():
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.NOTSET, filename='/opt/log/fwUpdate.log',
+    logging.basicConfig(level=logging.NOTSET, filename='/home/leo/log/fwUpdate.log',
                         format='%(asctime)s %(levelname)s: %(message)s')
     main()
