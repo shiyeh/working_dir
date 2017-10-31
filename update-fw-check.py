@@ -39,7 +39,7 @@ def cancelProcess():
     except Exception:
         pass
     finally:
-        log.error('Cancel the processes due to the error.')
+        log.error('Cancel the processes due to some error.')
         sys.exit(1)
 
 
@@ -63,7 +63,7 @@ def main():
         cancelProcess()
 
     fwName = os.path.basename(fwPath)
-    log.info('Fireware found, version is %s' % fwName)
+    log.info('Firmware found, version is %s' % fwName)
 
     ''' Untar the file XXX.fw to /tmp '''
     try:
@@ -76,15 +76,8 @@ def main():
         log.error(e)
         cancelProcess()
 
-    for tmpFile in fwFile.split():
-        if 'md5' in tmpFile:
-            md5File = '/tmp/{}'.format(tmpFile)
-        elif 'mlis.tar.gz' in tmpFile:
-            srcFile = '/tmp/{}'.format(tmpFile)
-        else:
-            log.error('Untar file not correct.')
-            log.error('Please check your FW file: {}'.format(tmpFile))
-            cancelProcess()
+    srcFile = '/tmp/' + fwFile.split()[0]  # Should be mlis.tar.gz
+    md5File = '/tmp/' + fwFile.split()[1]  # Should be md5
 
     ''' Try to open original md5 file, just cat file. '''
     try:
@@ -110,6 +103,6 @@ def main():
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.NOTSET, filename='/tmp/fwUpdate.log',
+    logging.basicConfig(level=logging.NOTSET, filename='/opt/log/fwUpdate.log',
                         format='%(asctime)s %(levelname)s: %(message)s')
     main()

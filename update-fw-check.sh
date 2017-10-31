@@ -3,7 +3,7 @@
 source /opt/mlis/init-mlb-env.sh
 
 DATE=`date "+%Y%m%d"`
-log_path="/opt/log/fwUpdate_${DATE}.log"
+log_path="/opt/log/fwUpdateTmp.log"
 echo "### This is log file when updating firmware." > ${log_path}
 echo "### DATE: ${DATE}" >> ${log_path}
 
