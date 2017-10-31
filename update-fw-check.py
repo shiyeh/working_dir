@@ -33,13 +33,13 @@ def killProcess():
 
 
 def cancelProcess():
-    _cmd = 'rm -f /tmp/*.fw /tmp/md5 /tmp/mlis.tar.gz'
+    _cmd = 'rm -f /tmp/*.fw {} {}'.format(SRCFILE, MD5FILE)
     try:
         os.system(_cmd)
     except Exception:
         pass
     finally:
-        log.error('Cancel the processes due to some error.')
+        log.error('Cancel the update processes, please check your FW file.')
         sys.exit(1)
 
 
@@ -76,12 +76,14 @@ def main():
         log.error(e)
         cancelProcess()
 
-    srcFile = '/tmp/' + fwFile.split()[0]  # Should be mlis.tar.gz
-    md5File = '/tmp/' + fwFile.split()[1]  # Should be md5
+    # srcFile = '/tmp/' + fwFile.split()[0]  # Should be mlis.tar.gz
+    # md5File = '/tmp/' + fwFile.split()[1]  # Should be md5
+    if not os.path.exists(SRCFILE) or not os.path.exists(MD5FILE):
+        cancelProcess()
 
     ''' Try to open original md5 file, just cat file. '''
     try:
-        with open(md5File, 'rt') as f:
+        with open(MD5FILE, 'rt') as f:
             md5_original = f.read().strip()
     except Exception as e:
         log.exception(e)
@@ -89,7 +91,7 @@ def main():
         f.close()
 
     ''' Compare these 2 md5 files. '''
-    md5_new = md5Checksum(srcFile)
+    md5_new = md5Checksum(SRCFILE)
     if md5_original != md5_new:
         log.error('MD5 Comparison: FAIL')
         log.error('MD5 original: %s' % (md5_original))
@@ -103,6 +105,8 @@ def main():
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.NOTSET, filename='/home/leo/log/fwUpdate.log',
+    logging.basicConfig(level=logging.NOTSET, filename='/opt/log/fwUpdate.log',
                         format='%(asctime)s %(levelname)s: %(message)s')
+    SRCFILE = '/tmp/mlis.tar.gz'
+    MD5FILE = '/tmp/md5'
     main()
