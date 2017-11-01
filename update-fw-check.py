@@ -2,6 +2,7 @@
 import os
 import sys
 import logging
+import time
 import glob
 import hashlib
 import signal
@@ -33,9 +34,14 @@ def killProcess():
 
 
 def cancelProcess():
-    _cmd = 'rm -f /tmp/*.fw {} {}'.format(SRCFILE, MD5FILE)
+    _date = time.strftime("%Y%m%d", time.localtime())
+    _log_path_bak = '/opt/log/fwUpdate_{}.log'.format(_date)
+    _cmd1 = 'rm -f /tmp/*.fw {} {}'.format(SRC_FILE, MD5_FILE)
+    _cmd2 = '/bin/mv {} {}'.format(LOG_PATH, _log_path_bak)
+
     try:
-        os.system(_cmd)
+        os.system(_cmd1)
+        os.system(_cmd2)
     except Exception:
         pass
     finally:
@@ -63,7 +69,7 @@ def main():
         cancelProcess()
 
     fwName = os.path.basename(fwPath)
-    log.info('Firmware found, version is %s' % fwName)
+    log.info('Firmware found, version is {}'.format(fwName))
 
     ''' Untar the file XXX.fw to /tmp '''
     try:
@@ -76,12 +82,15 @@ def main():
         log.error(e)
         cancelProcess()
 
-    if not os.path.exists(SRCFILE) or not os.path.exists(MD5FILE):
+    ''' Make sure the untar files are correct,
+        Or cancal the update procedure.
+    '''
+    if not os.path.exists(SRC_FILE) or not os.path.exists(MD5_FILE):
         cancelProcess()
 
     ''' Try to open original md5 file, just cat file. '''
     try:
-        with open(MD5FILE, 'rt') as f:
+        with open(MD5_FILE, 'rt') as f:
             md5_original = f.read().strip()
     except Exception as e:
         log.exception(e)
@@ -89,11 +98,11 @@ def main():
         f.close()
 
     ''' Compare these 2 md5 files. '''
-    md5_new = md5Checksum(SRCFILE)
+    md5_new = md5Checksum(SRC_FILE)
     if md5_original != md5_new:
         log.error('MD5 Comparison: FAIL')
-        log.error('MD5 original: %s' % (md5_original))
-        log.error('MD5 NEW: %s' % (md5_new))
+        log.error('MD5 original: {}'.format(md5_original))
+        log.error('MD5 NEW: {}'.format(md5_new))
         log.error('Firmware update cancel because the MD5 is not the same.')
         cancelProcess()
     else:
@@ -103,8 +112,10 @@ def main():
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.NOTSET, filename='/opt/log/fwUpdate.log',
+    LOG_PATH = '/opt/log/fwUpdate.log'
+    logging.basicConfig(level=logging.NOTSET, filename=LOG_PATH,
                         format='%(asctime)s %(levelname)s: %(message)s')
-    SRCFILE = '/tmp/mlis.tar.gz'
-    MD5FILE = '/tmp/md5'
+    SRC_FILE = '/tmp/mlis.tar.gz'
+    MD5_FILE = '/tmp/md5'
+
     main()
