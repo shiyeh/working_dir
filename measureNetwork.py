@@ -51,7 +51,7 @@ def updateTraffic(tx_bytes, rx_bytes):
     lastRowID = cur.execute("SELECT MAX(id) FROM traffic;").fetchone()[0]
     # cur.execute("update traffic set tx=(?), rx=(?), nowTime=(?) where id=(?);", (
     #             tx_bytes, rx_bytes, nowTime, lastRowID))
-    cur.execute("UPDATE traffic SET tx=(?), rx=(?) WHERE id=(?);", (
+    cur.execute("UPDATE traffic SET tx=(?), rx=(?), sqltime=CURRENT_TIMESTAMP WHERE id=(?);", (
                 tx_bytes, rx_bytes, lastRowID))
     # cur.execute("UPDATE traffic SET tx=(?), rx=(?);", (
     #             tx_bytes, rx_bytes))
@@ -62,10 +62,10 @@ def updateTraffic(tx_bytes, rx_bytes):
 def insertTraffic(tx_bytes, rx_bytes):
     con = sqlite3.connect(WEB_APP_DB_PATH)
     cur = con.cursor()
-    lastRowID = cur.execute("SELECT MAX(id) FROM traffic;").fetchone()[0]
+    # lastRowID = cur.execute("SELECT MAX(id) FROM traffic;").fetchone()[0]
     # cur.execute("insert into traffic(ID,tx,rx,nowTime) values(?,?,?,?);", (
     #             lastRowID+1, tx_bytes, rx_bytes, nowTime))
-    cur.execute("INSERT INTO traffic(tx, rx) VALUES(?, ?);", (tx_bytes, rx_bytes))
+    cur.execute("INSERT INTO traffic(tx, rx, sqltime) VALUES(?, ?, CURRENT_TIMESTAMP);", (tx_bytes, rx_bytes))
     con.commit()
     con.close()
 
@@ -98,7 +98,7 @@ sqltime TIMESTAMP DEFAULT (DATETIME(CURRENT_TIMESTAMP, 'LOCALTIME')) NOT NULL);"
 
 def getNetworkInterfaces():
     ifaces = []
-    with open(nicFile) as f:
+    with open(NIC_FILE) as f:
         data = f.read()
 
     data = data.split("\n")[2:]
@@ -231,17 +231,17 @@ def main():
 
 
 if __name__ == '__main__':
-    INTERVAL = 5            # seconds
+    INTERVAL = 3            # seconds
     AVG_LOW_PASS = 0.2      # Simple Complemetary Filter
 
-    nicFile = "/proc/net/dev"
-    wanInterface = 'ens33'
+    NIC_FILE = "/proc/net/dev"
+    wanInterface = 'lo'
     WEB_APP_DB_PATH = os.environ["WEB_APP_DBTMP_PATH"]
 
     # Every 'record_intvl' seconds, insert new data to the table,
     # default is 1 hour.
     # record_intvl = 3600
-    record_intvl = 10
+    record_intvl = 20
 
     if len(sys.argv) == 2 and sys.argv[1] == 'reset':
         if resetTable() == 0:
