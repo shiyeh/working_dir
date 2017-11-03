@@ -46,54 +46,50 @@ $ python {0} eth0
 
 
 def updateTraffic(tx_bytes, rx_bytes):
-    con = sqlite3.connect(WEB_APP_DB_PATH)
+    con = sqlite3.connect(WEB_STA_DB_PATH)
     cur = con.cursor()
     lastRowID = cur.execute("SELECT MAX(id) FROM traffic;").fetchone()[0]
-    # cur.execute("update traffic set tx=(?), rx=(?), nowTime=(?) where id=(?);", (
-    #             tx_bytes, rx_bytes, nowTime, lastRowID))
     cur.execute("UPDATE traffic SET tx=(?), rx=(?), sqltime=CURRENT_TIMESTAMP WHERE id=(?);", (
                 tx_bytes, rx_bytes, lastRowID))
-    # cur.execute("UPDATE traffic SET tx=(?), rx=(?);", (
-    #             tx_bytes, rx_bytes))
     con.commit()
     con.close()
 
 
 def insertTraffic(tx_bytes, rx_bytes):
-    con = sqlite3.connect(WEB_APP_DB_PATH)
+    con = sqlite3.connect(WEB_STA_DB_PATH)
     cur = con.cursor()
-    # lastRowID = cur.execute("SELECT MAX(id) FROM traffic;").fetchone()[0]
-    # cur.execute("insert into traffic(ID,tx,rx,nowTime) values(?,?,?,?);", (
-    #             lastRowID+1, tx_bytes, rx_bytes, nowTime))
-    cur.execute("INSERT INTO traffic(tx, rx, sqltime) VALUES(?, ?, CURRENT_TIMESTAMP);", (tx_bytes, rx_bytes))
+    cur.execute("INSERT INTO traffic(tx, rx, sqltime) VALUES(?, ?, CURRENT_TIMESTAMP);", (
+                tx_bytes, rx_bytes))
     con.commit()
     con.close()
 
 
 def queryLastTraffic():
-    con = sqlite3.connect(WEB_APP_DB_PATH)
+    con = sqlite3.connect(WEB_STA_DB_PATH)
     cur = con.cursor()
     lastRowID = cur.execute("SELECT MAX(id) FROM traffic;").fetchone()[0]
-    lastTx = cur.execute("SELECT * FROM traffic WHERE id=(?)", (lastRowID,)).fetchone()[1]
-    lastRx = cur.execute("SELECT * FROM traffic WHERE id=(?)", (lastRowID,)).fetchone()[2]
+    lastTx, lastRx = cur.execute("SELECT tx, rx FROM traffic WHERE id=(?)", (lastRowID,)).fetchone()
     con.close()
 
     return int(lastTx), int(lastRx)
 
 
 def resetTable():
-    con = sqlite3.connect(WEB_APP_DB_PATH)
-    cur = con.cursor()
-    cur.execute("DROP TABLE IF EXISTS traffic;")
-    cur.execute("CREATE TABLE traffic(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, \
+    try:
+        con = sqlite3.connect(WEB_STA_DB_PATH)
+        cur = con.cursor()
+        cur.execute("DROP TABLE IF EXISTS traffic;")
+        cur.execute("CREATE TABLE traffic(id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, \
 tx INT NOT NULL, \
 rx INT NOT NULL, \
 sqltime TIMESTAMP DEFAULT (DATETIME(CURRENT_TIMESTAMP, 'LOCALTIME')) NOT NULL);")
-    cur.execute("INSERT INTO traffic(tx, rx) VALUES(0, 0);")
-    con.commit()
-    con.close()
-
-    return 0
+        cur.execute("INSERT INTO traffic(tx, rx) VALUES(0, 0);")
+        con.commit()
+        con.close()
+    except Exception:
+        return 1
+    else:
+        return 0
 
 
 def getNetworkInterfaces():
@@ -167,18 +163,6 @@ def main():
         }
 
     initTime = time.time()
-
-    # con = sqlite3.connect(WEB_APP_DB_PATH)
-    # cur = con.cursor()
-    # lastRowID = cur.execute("select max(id) from traffic;").fetchone()[0]
-    # if lastRowID == 0:
-    #     cur.execute("insert into traffic(id, tx, rx) values(?, 0, 0);", (lastRowID+1,))
-    # else:
-    #     lastTx, lastRx = queryLastTraffic()
-    #     cur.execute("insert into traffic(id, tx, rx) values(?, ?, ?);", (lastRowID+1, lastTx, lastRx))
-    # con.commit()
-    # con.close()
-
     lastTx, lastRx = queryLastTraffic()
 
     while True:
@@ -235,8 +219,9 @@ if __name__ == '__main__':
     AVG_LOW_PASS = 0.2      # Simple Complemetary Filter
 
     NIC_FILE = "/proc/net/dev"
-    wanInterface = 'lo'
-    WEB_APP_DB_PATH = os.environ["WEB_APP_DBTMP_PATH"]
+    wanInterface = 'ens33'
+    WEB_STA_DB_PATH = '/tmp/status.db'
+    # WEB_STA_DB_PATH = os.environ["WEB_STAT_DB_PATH"]
 
     # Every 'record_intvl' seconds, insert new data to the table,
     # default is 1 hour.
@@ -247,8 +232,11 @@ if __name__ == '__main__':
         if resetTable() == 0:
             print 'Reset table...'
             sys.exit(0)
+        else:
+            print 'Table reset failed.'
+            sys.exit(1)
 
-    if not os.path.exists(WEB_APP_DB_PATH):
+    if not os.path.exists(WEB_STA_DB_PATH):
         print 'DB not found'
         sys.exit(1)
 
