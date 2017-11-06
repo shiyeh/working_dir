@@ -27,9 +27,9 @@ def clearProcess():
     _log_path_bak = '/opt/log/fwUpdate_{}.log'.format(_date)
     _cmd = '/bin/mv {} {}'.format(LOG_PATH, _log_path_bak)
 
-    os.system(_cmd)
     log.info('Reboot the system.')
-    os.system('/sbin/reboot')
+    os.system(_cmd)
+    os.system('/bin/sync; /sbin/reboot')
 
 
 def main():
