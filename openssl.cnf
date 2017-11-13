@@ -1,0 +1,17 @@
+HOME=.
+RANDFILE= $ENV::HOME/.rnd
+[ req ]
+default_bits = 2048
+default_keyfile = /etc/nginx/ssl/nginx.key
+x509_extensions = v3_ca
+req_extensions = v3_req
+encrypt_key = no
+prompt=no
+distinguished_name = req_distinguished_name
+
+[ req_distinguished_name ]
+countryName=TW
+localityName=taipei
+0.organizationName=Schmidt
+commonName=10.0.10.1
+emailAddress=leoyeh@schmidtelectronics.com
