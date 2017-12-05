@@ -1,0 +1,628 @@
+-- *****************************************************************
+-- MLiS G420x MIB
+-- version 0.1 build 20161128
+--
+-- 2007 Schmidt & Co., (HK) Ltd. - Taiwan Branch.
+-- All Rights reserved.
+-- *****************************************************************
+
+
+MLiS-G420x-LTE-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+        enterprises, IpAddress, OBJECT-TYPE
+            FROM SNMPv2-SMI
+        DateAndTime, TEXTUAL-CONVENTION, MacAddress, DisplayString
+            FROM SNMPv2-TC;
+
+    schmidt OBJECT IDENTIFIER ::= { enterprises 46144 } -- 1.3.6.1.4.1.46144
+
+    wireless OBJECT IDENTIFIER ::= { schmidt 2 } -- 1.3.6.1.4.1.46144.2
+
+    g420x MODULE-IDENTITY
+        LAST-UPDATED "201611281648Z"
+        ORGANIZATION "Schmidt Inc."
+        CONTACT-INFO
+            "Postal: Schmidt & Co., (H.K.) Ltd. Taiwan Branch
+             5F, No. 139, Song Jiang, Taipei 104
+             E-mail: support.mlis@schmidtelectronics.com
+             Tel: +886-2-25025095 "
+
+        DESCRIPTION
+            "The MIB module for MLiS G420x series specific information."
+
+        ::= { wireless 2 } -- 1.3.6.1.4.1.46144.2.2
+
+-- -------------------------------------------------------------
+-- groups in the MLiS  G420x MIB
+-- -------------------------------------------------------------
+
+    overview OBJECT IDENTIFIER ::= { g420x 1 } -- 1.3.6.1.4.1.46144.2.2.1
+
+    systemInfo OBJECT IDENTIFIER ::= { overview 1 } -- 1.3.6.1.4.1.46144.2.2.1.1
+
+        modelName OBJECT-TYPE
+            SYNTAX DisplayString
+            MAX-ACCESS read-only
+            STATUS current
+            DESCRIPTION
+                "Model name
+
+                "
+            ::= { systemInfo 1 }
+
+        deviceName OBJECT-TYPE
+            SYNTAX DisplayString
+            MAX-ACCESS read-write
+            STATUS current
+            DESCRIPTION
+                "Device name
+
+                "
+            ::= { systemInfo 2 }
+
+        deviceFirmwareVersion OBJECT-TYPE
+            SYNTAX DisplayString
+            MAX-ACCESS read-only
+            STATUS current
+            DESCRIPTION
+                "Firmware version
+
+                "
+            ::= { systemInfo 3 }
+
+        deviceFirmwareBuildTime OBJECT-TYPE
+            SYNTAX DisplayString
+            MAX-ACCESS read-only
+            STATUS current
+            DESCRIPTION
+                "Firmware Build Time
+
+                "
+            ::= { systemInfo 4 }
+
+    lanInfo OBJECT IDENTIFIER ::= { overview 2 } -- 1.3.6.1.4.1.46144.2.2.1.2
+
+        deviceMacAddress OBJECT-TYPE
+            SYNTAX DisplayString
+            MAX-ACCESS read-only
+            STATUS current
+            DESCRIPTION
+                "Mac Address
+
+                "
+            ::= { lanInfo 1 }
+
+        deviceIpAddress OBJECT-TYPE
+            SYNTAX DisplayString
+            MAX-ACCESS read-only
+            STATUS current
+            DESCRIPTION
+                "Ip Address
+
+                "
+            ::= { lanInfo 2 }
+
+        deviceSubmask OBJECT-TYPE
+            SYNTAX DisplayString
+            MAX-ACCESS read-only
+            STATUS current
+            DESCRIPTION
+                "Submask
+
+                "
+            ::= { lanInfo 3 }
+
+    cellular OBJECT IDENTIFIER ::= { overview 3 } -- 1.3.6.1.4.1.46144.2.2.1.3
+
+        deviceCellularRSSI OBJECT-TYPE
+            SYNTAX DisplayString
+            MAX-ACCESS read-only
+            STATUS current
+            DESCRIPTION
+                "Cellular RSSI
+
+                "
+            ::= { cellular 1 }
+
+        deviceWanIpAddress OBJECT-TYPE
+            SYNTAX DisplayString
+            MAX-ACCESS read-only
+            STATUS current
+            DESCRIPTION
+                "WAN IP address
+
+                "
+            ::= { cellular 2 }
+
+        deviceMode OBJECT-TYPE
+            SYNTAX DisplayString
+            MAX-ACCESS read-only
+            STATUS current
+            DESCRIPTION
+                "mode
+
+                "
+            ::= { cellular 3 }
+
+    cellularInfo OBJECT IDENTIFIER ::= { overview 4 } -- 1.3.6.1.4.1.46144.2.2.1.4
+
+        deviceImei OBJECT-TYPE
+            SYNTAX DisplayString
+            MAX-ACCESS read-only
+            STATUS current
+            DESCRIPTION
+                "IMEI
+
+                "
+            ::= { cellularInfo 1 }
+
+        deviceImsi OBJECT-TYPE
+            SYNTAX DisplayString
+            MAX-ACCESS read-only
+            STATUS current
+            DESCRIPTION
+                "IMSI
+
+                "
+            ::= { cellularInfo 2 }
+
+
+    basicSetting OBJECT IDENTIFIER ::= { g420x 2 } -- 1.3.6.1.4.1.46144.2.2.2
+    networkSetting OBJECT IDENTIFIER ::= { basicSetting 1 } -- 1.3.6.1.4.1.46144.2.2.2.1
+    lanSetting OBJECT IDENTIFIER ::= { networkSetting 1 } -- 1.3.6.1.4.1.46144.2.2.2.1.1
+
+        ipAddr OBJECT-TYPE
+            SYNTAX IpAddress
+            MAX-ACCESS read-write
+            STATUS current
+            DESCRIPTION
+                "internal ip address.
+
+                "
+            ::= { lanSetting 1 }
+
+        submask OBJECT-TYPE
+            SYNTAX IpAddress
+            MAX-ACCESS read-write
+            STATUS current
+            DESCRIPTION
+                "internal submask.
+
+                "
+            ::= { lanSetting 2 }
+
+        dns OBJECT-TYPE
+            SYNTAX IpAddress
+            MAX-ACCESS read-write
+            STATUS current
+            DESCRIPTION
+                "domain name service's ip address.
+
+                "
+            ::= { lanSetting 3 }
+
+        secDns OBJECT-TYPE
+            SYNTAX IpAddress
+            MAX-ACCESS read-write
+            STATUS current
+            DESCRIPTION
+                "Second domain name service's ip address.
+
+                "
+            ::= { lanSetting 4 }
+
+    cellularWanSetting OBJECT IDENTIFIER ::= { basicSetting 2 } -- 1.3.6.1.4.1.46144.2.2.2.2
+
+
+        wanSetttingTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF wanSettingEntry
+            MAX-ACCESS not-accessible
+            STATUS current
+            DESCRIPTION
+                "Table of wanSetting"
+            ::= { cellularWanSetting 1 }
+
+        wanSettingEntry OBJECT-TYPE
+            SYNTAX wanSettingEntry
+            MAX-ACCESS not-accessible
+            STATUS current
+            DESCRIPTION
+                "Entry of wanSetting"
+            INDEX { apn }
+            ::= { wanSetttingTable 1 }
+
+        wanSettingEntry ::=
+            SEQUENCE {
+                apn
+                    DisplayString,
+                pin
+                    DisplayString,
+                auth
+                    DisplayString,
+                username
+                    DisplayString,
+                password
+                    DisplayString,
+            }
+
+        apn OBJECT-TYPE
+            SYNTAX DisplayString
+            MAX-ACCESS read-write
+            STATUS current
+            DESCRIPTION
+                "
+
+                "
+            ::= { wanSettingEntry 1 }
+
+        pin OBJECT-TYPE
+            SYNTAX DisplayString
+            MAX-ACCESS read-write
+            STATUS current
+            DESCRIPTION
+                "pin number of sim card.
+
+                "
+            ::= { wanSettingEntry 2 }
+
+        auth OBJECT-TYPE
+            SYNTAX DisplayString
+            MAX-ACCESS read-write
+            STATUS current
+            DESCRIPTION
+                "only 'pap' and 'chap' can use.
+
+                "
+            ::= { wanSettingEntry 3 }
+
+        username OBJECT-TYPE
+            SYNTAX DisplayString
+            MAX-ACCESS read-write
+            STATUS current
+            DESCRIPTION
+                "leave empty if user's name is unnecessary.
+
+                "
+            ::= { wanSettingEntry 4 }
+
+        password OBJECT-TYPE
+            SYNTAX DisplayString
+            MAX-ACCESS read-write
+            STATUS current
+            DESCRIPTION
+                "leave empty if password name is unnecessary.
+
+                "
+            ::= { wanSettingEntry 5 }
+
+    dhcp OBJECT IDENTIFIER ::= { basicSetting 3 } -- 1.3.6.1.4.1.46144.2.2.2.3
+    dhcpServer OBJECT IDENTIFIER ::= { dhcp 1 } -- 1.3.6.1.4.1.46144.2.2.2.1.1
+
+        dhcpActive OBJECT-TYPE
+            SYNTAX INTEGER (0..1)
+            MAX-ACCESS read-write
+            STATUS current
+            DESCRIPTION
+                "Disable (0)
+                 Enable  (1)
+                "
+            ::= { dhcpServer 1 }
+
+        gateway OBJECT-TYPE
+            SYNTAX IpAddress
+            MAX-ACCESS read-write
+            STATUS current
+            DESCRIPTION
+                "gateway.
+
+                "
+            ::= { dhcpServer 2 }
+
+        submask OBJECT-TYPE
+            SYNTAX IpAddress
+            MAX-ACCESS read-write
+            STATUS current
+            DESCRIPTION
+                "submask.
+
+                "
+            ::= { dhcpServer 3 }
+
+        dns OBJECT-TYPE
+            SYNTAX IpAddress
+            MAX-ACCESS read-write
+            STATUS current
+            DESCRIPTION
+                "dns.
+
+                "
+            ::= { dhcpServer 4 }
+
+        SecondDns OBJECT-TYPE
+            SYNTAX IpAddress
+            MAX-ACCESS read-write
+            STATUS current
+            DESCRIPTION
+                "second dns.
+
+                "
+            ::= { dhcpServer 5 }
+
+        startIp OBJECT-TYPE
+            SYNTAX IpAddress
+            MAX-ACCESS read-write
+            STATUS current
+            DESCRIPTION
+                "dhcp assign ip start point.
+
+                "
+            ::= { dhcpServer 6 }
+
+        maxUsers OBJECT-TYPE
+            SYNTAX INTEGER
+            MAX-ACCESS read-write
+            STATUS current
+            DESCRIPTION
+                "range 1~99
+
+                "
+            ::= { dhcpServer 7 }
+
+        ClientTime OBJECT-TYPE
+            SYNTAX INTEGER
+            MAX-ACCESS read-write
+            STATUS current
+            DESCRIPTION
+                "range 120~86400 (sec)
+
+                "
+            ::= { dhcpServer 8 }
+
+        dhcpMappingTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF dhcpMappingEntry
+            MAX-ACCESS not-accessible
+            STATUS current
+            DESCRIPTION
+                "Table of dhcpMapping"
+            ::= { dhcp 2 }
+
+        dhcpMappingEntry OBJECT-TYPE
+            SYNTAX wanSettingEntry
+            MAX-ACCESS not-accessible
+            STATUS current
+            DESCRIPTION
+                "Entry of wanSetting"
+            INDEX { active }
+            ::= { dhcpMappingTable 1 }
+
+        dhcpMappingEntry ::=
+            SEQUENCE {
+                active
+                    INTEGER,
+                ip
+                    IpAddress,
+                mac
+                    DisplayString,
+            }
+
+        active OBJECT-TYPE
+            SYNTAX INTEGER (0..1)
+            MAX-ACCESS read-write
+            STATUS current
+            DESCRIPTION
+                "disable (0)
+                 enable  (1)
+                "
+            ::= { dhcpMappingEntry 1 }
+
+        ip OBJECT-TYPE
+            SYNTAX IpAddress
+            MAX-ACCESS read-write
+            STATUS current
+            DESCRIPTION
+                "ip address
+
+                "
+            ::= { dhcpMappingEntry 2 }
+
+        mac OBJECT-TYPE
+            SYNTAX DisplayString
+            MAX-ACCESS read-write
+            STATUS current
+            DESCRIPTION
+                "mac address
+
+                "
+            ::= { dhcpMappingEntry 3 }
+
+        portForwardingTable OBJECT-TYPE
+            SYNTAX SEQUENCE OF portForwardingEntry
+            MAX-ACCESS not-accessible
+            STATUS current
+            DESCRIPTION
+                "Table of portForwarding"
+            ::= { basicSetting 4 }
+
+        portForwardingEntry OBJECT-TYPE
+            SYNTAX PortForwardingEntry
+            MAX-ACCESS not-accessible
+            STATUS current
+            DESCRIPTION
+                "Entry of portForwarding"
+            INDEX { active }
+            ::= { portForwardingTable 1 }
+
+        portForwardingEntry ::=
+            SEQUENCE {
+                active
+                    INTEGER,
+                protocol
+                    DisplayString,
+                publicPort
+                    INTEGER,
+                ip
+                    IpAddress,
+                internalPort
+                    INTEGER,
+            }
+
+        active OBJECT-TYPE
+            SYNTAX INTEGER(0..1)
+            MAX-ACCESS read-write
+            STATUS current
+            DESCRIPTION
+                "disable (0)
+                 enable  (1)
+                "
+            ::= { portForwardingEntry 1 }
+
+
+        protocol OBJECT-TYPE
+            SYNTAX DisplayString
+            MAX-ACCESS read-write
+            STATUS current
+            DESCRIPTION
+                "only accept 'tcp' or 'udp'.
+
+                "
+            ::= { portForwardingEntry 2 }
+
+        publicPort OBJECT-TYPE
+            SYNTAX INTEGER
+            MAX-ACCESS read-write
+            STATUS current
+            DESCRIPTION
+                "public port.
+
+                "
+            ::= { portForwardingEntry 3 }
+
+        ip OBJECT-TYPE
+            SYNTAX IpAddress
+            MAX-ACCESS read-write
+            STATUS current
+            DESCRIPTION
+                "ip address
+
+                "
+            ::= { portForwardingEntry 4 }
+
+        internalPort OBJECT-TYPE
+            SYNTAX INTEGER
+            MAX-ACCESS read-write
+            STATUS current
+            DESCRIPTION
+                "
+
+                "
+            ::= { portForwardingEntry 5 }
+
+    advancedSetting OBJECT IDENTIFIER ::= { g420x 3 } -- 1.3.6.1.4.1.46144.2.2.3
+    serialSetting OBJECT IDENTIFIER ::= { advancedSetting 1 } -- 1.3.6.1.4.1.46144.2.2.3.1
+
+        workMode OBJECT-TYPE
+            SYNTAX DisplayString
+            MAX-ACCESS read-write
+            STATUS current
+            DESCRIPTION
+                "'mccp' or 'trans'
+
+                "
+            ::= { serialSetting 1 }
+
+        transportMode OBJECT-TYPE
+            SYNTAX DisplayString
+            MAX-ACCESS read-write
+            STATUS current
+            DESCRIPTION
+                "'232', '422', '485'
+
+                "
+            ::= { serialSetting 2 }
+
+        baudRate OBJECT-TYPE
+            SYNTAX INTEGER
+            MAX-ACCESS read-write
+            STATUS current
+            DESCRIPTION
+                "support baudrate 1200, 2400, 4800,
+                 9600, 19200, 38400, 57600, 115200,
+                 230400
+                "
+            ::= { serialSetting 3 }
+
+        parity OBJECT-TYPE
+            SYNTAX DisplayString
+            MAX-ACCESS read-write
+            STATUS current
+            DESCRIPTION
+                "'none', 'odd', or 'even'
+
+                "
+            ::= { serialSetting 4 }
+
+        dataBits OBJECT-TYPE
+            SYNTAX INTEGER
+            MAX-ACCESS read-write
+            STATUS current
+            DESCRIPTION
+                "5 ~ 8
+
+                "
+            ::= { serialSetting 5 }
+
+        stopBits OBJECT-TYPE
+            SYNTAX INTEGER
+            MAX-ACCESS read-write
+            STATUS current
+            DESCRIPTION
+                "1, 1.5 or 2
+
+                "
+            ::= { serialSetting 6 }
+
+        ipAddress OBJECT-TYPE
+            SYNTAX IpAddress
+            MAX-ACCESS read-write
+            STATUS current
+            DESCRIPTION
+                "ip address
+
+                "
+            ::= { serialSetting 7 }
+
+        port OBJECT-TYPE
+            SYNTAX INTEGER
+            MAX-ACCESS read-write
+            STATUS current
+            DESCRIPTION
+                "port
+
+                "
+            ::= { serialSetting 8 }
+
+    maintenance OBJECT IDENTIFIER ::= { g420x 20 } -- 1.3.6.1.4.1.46144.2.2.20
+    saveAndReboot OBJECT IDENTIFIER ::= { maintenance 1 } -- 1.3.6.1.4.1.46144.2.2.20.1
+
+        saveReboot OBJECT-TYPE
+            SYNTAX INTEGER (0..1)
+            MAX-ACCESS read-write
+            STATUS current
+            DESCRIPTION
+                "set 1 to save configuration
+                 and reboot immediately.
+
+                "
+            ::= { saveAndReboot 1 }
+
+        reboot OBJECT-TYPE
+            SYNTAX INTEGER (0..1)
+            MAX-ACCESS read-write
+            STATUS current
+            DESCRIPTION
+                "set 1 to reboot immediately without
+                 save.
+                "
+            ::= { saveAndReboot 2 }
+END
