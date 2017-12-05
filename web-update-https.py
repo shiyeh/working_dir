@@ -3,6 +3,12 @@ import subprocess
 import os
 
 
+def enableHttpsConf():
+    # If generate key successful,
+    # should be copy config file to /etc/nginx/sites-enabled/web_console
+    pass
+
+
 def genKeyCrt():
     sslPath = '/etc/nginx/ssl'
     if not os.path.exists(sslPath):
@@ -20,7 +26,9 @@ def genKeyCrt():
 
 
 def main():
-    genKeyCrt()
+    if genKeyCrt() == 0:
+        os.system('/etc/init.d/nginx stop')
+        os.system('/etc/init.d/nginx start')
 
 
 if __name__ == '__main__':
