@@ -1,6 +1,5 @@
 #!/usr/bin/python
 
-import os, sys
 import subprocess
 
 try:
@@ -16,7 +15,4 @@ try:
 
 except Exception:
     # 'Some error occured with the command:', cmd
-    print("Error command: %s" % cmd)
-    sys.exit(1)
-else:
-    pass
+    print("Error command: {}".format(cmd))

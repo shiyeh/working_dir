@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import sys
 import paramiko
+# import PyQt4
 from PyQt4.QtGui import *
 from PyQt4.QtCore import *
 
@@ -43,7 +44,7 @@ def doAction():
 a = QApplication(sys.argv)
 w = QWidget()
 w.resize(300, 160)
-w.setWindowTitle("Hello world!")
+w.setWindowTitle("MLiS")
 
 label = QLabel('Where is your machine (IP address) ?', w)
 

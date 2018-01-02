@@ -11,6 +11,9 @@ import subprocess
 from subprocess import Popen, PIPE
 
 log = logging.getLogger(__name__)
+LOG_PATH = '/tmp/fwUpdate.log'
+SRC_FILE = '/tmp/mlis.tar.gz'
+MD5_FILE = '/tmp/md5'
 
 
 def killProcess():
@@ -34,18 +37,18 @@ def killProcess():
 
 
 def cancelProcess():
-    _date = time.strftime("%Y%m%d", time.localtime())
+    _date = time.strftime("%Y%m%d-%H%M%S", time.localtime())
     _log_path_bak = '/opt/log/fwUpdate_{}.log'.format(_date)
     _cmd1 = 'rm -f /tmp/*.fw {} {}'.format(SRC_FILE, MD5_FILE)
     _cmd2 = '/bin/mv {} {}'.format(LOG_PATH, _log_path_bak)
 
     try:
+        log.error('Cancel the update processes, please check your FW file.')
         os.system(_cmd1)
         os.system(_cmd2)
     except Exception:
         pass
     finally:
-        log.error('Cancel the update processes, please check your FW file.')
         sys.exit(1)
 
 
@@ -83,7 +86,7 @@ def main():
         cancelProcess()
 
     ''' Make sure the untar files are correct,
-        Or cancal the update procedure.
+        Or cancel the update procedure.
     '''
     if not os.path.exists(SRC_FILE) or not os.path.exists(MD5_FILE):
         cancelProcess()
@@ -112,10 +115,6 @@ def main():
 
 
 if __name__ == '__main__':
-    LOG_PATH = '/opt/log/fwUpdate.log'
     logging.basicConfig(level=logging.NOTSET, filename=LOG_PATH,
                         format='%(asctime)s %(levelname)s: %(message)s')
-    SRC_FILE = '/tmp/mlis.tar.gz'
-    MD5_FILE = '/tmp/md5'
-
     main()

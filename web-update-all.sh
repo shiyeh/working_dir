@@ -1,6 +1,6 @@
 #!/bin/sh
 
-source init-mlb-env.sh
+source /opt/mlis/init-mlb-env.sh
 
 if [ -f "${WEB_APP_DB_PATH}" ]
 then
@@ -98,12 +98,12 @@ then
         BCKINGSIM="2"
     fi
 
-    export DB_APN=`sqlite3 "${WEB_APP_DB_PATH}" "select apn from wan_setting where id=${PRISIM}"`
-    export DB_USR_NAME=`sqlite3 "${WEB_APP_DB_PATH}" "select username from wan_setting where id=${PRISIM}"`
-    export DB_PASS_WRD=`sqlite3 "${WEB_APP_DB_PATH}" "select password from wan_setting where id=${PRISIM}"`
-    export DB_2ND_APN=`sqlite3 "${WEB_APP_DB_PATH}" "select apn from wan_setting where id=${BCKINGSIM}"`
-    export DB_2ND_USR_NAME=`sqlite3 "${WEB_APP_DB_PATH}" "select username from wan_setting where id=${BCKINGSIM}"`
-    export DB_2ND_PASS_WRD=`sqlite3 "${WEB_APP_DB_PATH}" "select password from wan_setting where id=${BCKINGSIM}"`
+    export DB_APN=`sqlite3 "${WEB_APP_DB_PATH}" "select apn from wan_setting where id=1"`
+    export DB_USR_NAME=`sqlite3 "${WEB_APP_DB_PATH}" "select username from wan_setting where id=1"`
+    export DB_PASS_WRD=`sqlite3 "${WEB_APP_DB_PATH}" "select password from wan_setting where id=1"`
+    export DB_2ND_APN=`sqlite3 "${WEB_APP_DB_PATH}" "select apn from wan_setting where id=2"`
+    export DB_2ND_USR_NAME=`sqlite3 "${WEB_APP_DB_PATH}" "select username from wan_setting where id=2"`
+    export DB_2ND_PASS_WRD=`sqlite3 "${WEB_APP_DB_PATH}" "select password from wan_setting where id=2"`
 
     source "${MLB_DIR}/gen-apn-conf.sh"
     echo "APN=${DB_APN}" > "${MLB_QMI_APN_OPT_PATH}"
@@ -121,7 +121,7 @@ then
     export VPN_IPSEC_CONF_RULES=""
     export VPN_IPSEC_SECRETS_RULES=""
     if [ "${DB_VPN_ACTIVE}" = 0 ]; then
-        update-rc.d -f ipsec remove
+        /usr/sbin/update-rc.d -f ipsec remove
     else
         for indx in {1..5}
         do
@@ -214,7 +214,7 @@ then
             fi
         done
         source gen-vpn-conf.sh
-        update-rc.d -f ipsec defaults
+        /usr/sbin/update-rc.d -f ipsec defaults
     fi
     ###========snmp agent setting=================
     DB_SNMP_EN=`sqlite3 "${WEB_APP_DB_PATH}" "select active from snmp_agent"`
@@ -271,9 +271,9 @@ then
             mkdir -p ${SYS_SNMP_CFG_DIR}
         fi
         source gen-snmp-conf.sh
-        update-rc.d -f snmpd defaults
+        /usr/sbin/update-rc.d -f snmpd defaults
     else
-        update-rc.d -f snmpd remove
+        /usr/sbin/update-rc.d -f snmpd remove
     fi
 
     ###========OpenVPN setting=================
@@ -289,17 +289,318 @@ then
 
         rm -f ${SYS_OPENVPN_CONF_DIR}/*
         cp -f ${MLB_OPENVPN_CONF_DIR}/${DB_OPENVPN_CONF} ${SYS_OPENVPN_CONF_DIR}
-        update-rc.d -f openvpn defaults
+        /usr/sbin/update-rc.d -f openvpn defaults
     else
-        update-rc.d -f openvpn remove
+        /usr/sbin/update-rc.d -f openvpn remove
     fi
 
-    BACKUP_PATH="${MLB_PPP_NAT_PATH}"
+	### Port Forwarding setting.
+	export IPTBL_FILTER_RULES=""
+	export IPTBL_NAT_RULES=""
+	export MLB_IFACE="ppp0"
 
-    # Generate iptables config file by call python script
-    /usr/bin/python gen-iptables-rules.py
+	BACKUP_PATH="${MLB_PPP_NAT_PATH}"
 
-    MLB_PPP_NAT_PATH="${BACKUP_PATH}"
+	MLB_PPP_NAT_PATH="${MLB_CONF_DIR}/${MLB_PPP_NAT_CFG}"
+	MLB_IFACE="ppp0"
+
+    # block/allow new http connection from Public IP/WWAN interface.
+    WAN_AL_HTTP_EN=`sqlite3 "${WEB_APP_DB_PATH}" "select wan_allow_http from service_setting where id=1"`
+    if [ "${WAN_AL_HTTP_EN}" = 0 ]
+    then
+        TMP_ACT="DROP"
+    else
+        TMP_ACT="ACCEPT"
+    fi
+    TMP_RULES="-p tcp -s 0/0 --sport 1024:65535 -d 0/0 --dport 80 -m state --state NEW -j ${TMP_ACT}"
+    IPTBL_FILTER_RULES+="-A INPUT -i ${MLB_IFACE} ${TMP_RULES}"
+    IPTBL_FILTER_RULES+=$'\n'
+
+    # block/allow new https connection from Public IP/WWAN interface.
+    WAN_AL_HTTPS_EN=`sqlite3 "${WEB_APP_DB_PATH}" "select wan_allow_https from service_setting where id=1"`
+    if [ "${WAN_AL_HTTPS_EN}" = 0 ]
+    then
+        TMP_ACT="DROP"
+    else
+        TMP_ACT="ACCEPT"
+    fi
+    TMP_RULES="-p tcp -s 0/0 --sport 1024:65535 -d 0/0 --dport 443 -m state --state NEW -j ${TMP_ACT}"
+    IPTBL_FILTER_RULES+="-A INPUT -i ${MLB_IFACE} ${TMP_RULES}"
+    IPTBL_FILTER_RULES+=$'\n'
+
+    # block/allow new ssh connection from Public IP/WWAN interface.
+    WAN_AL_SSH_EN=`sqlite3 "${WEB_APP_DB_PATH}" "select wan_allow_ssh from service_setting where id=1"`
+    if [ "${WAN_AL_SSH_EN}" = 0 ]
+    then
+        TMP_ACT="DROP"
+    else
+        TMP_ACT="ACCEPT"
+    fi
+    TMP_RULES="-p tcp -s 0/0 --sport 1024:65535 -d 0/0 --dport 22 -m state --state NEW -j ${TMP_ACT}"
+    IPTBL_FILTER_RULES+="-A INPUT -i ${MLB_IFACE} ${TMP_RULES}"
+    IPTBL_FILTER_RULES+=$'\n'
+
+    # blocking new icmp connection from Public IP/WWAN interface if users not allow.
+    DB_AL_PING_EN=`sqlite3 "${WEB_APP_DB_PATH}" "select allow_ping from lan_setting where id=1"`
+    # Default value is not allowed.
+    if [ "${DB_AL_PING_EN}" = 0 ]
+    then
+        TMP_RULES="-p icmp --icmp-type 8 -s 0/0 -d 0/0 -m state --state NEW -j DROP"
+        IPTBL_FILTER_RULES+="-A INPUT -i ${MLB_IFACE} ${TMP_RULES}"
+        IPTBL_FILTER_RULES+=$'\n'
+    fi
+
+	for indx in {1..32}
+	do
+		rule="select active from port_forwarding where id=${indx}"
+		DB_NAT_PORTFW_EN=`sqlite3 "${WEB_APP_DB_PATH}" "${rule}"`
+		if [ "${DB_NAT_PORTFW_EN}" = 1 ]
+		then
+			rule="select ip from port_forwarding where id=${indx}"
+			DB_NAT_PORTFW_IP=`sqlite3 "${WEB_APP_DB_PATH}" "${rule}"`
+			rule="select public_port from port_forwarding where id=${indx}"
+			DB_NAT_PORTFW_PUBLIC=`sqlite3 "${WEB_APP_DB_PATH}" "${rule}"`
+			rule="select internal_port from port_forwarding where id=${indx}"
+			DB_NAT_PORTFW_INTERNAL=`sqlite3 "${WEB_APP_DB_PATH}" "${rule}"`
+			rule="select protocol from port_forwarding where id=${indx}"
+			DB_NAT_PORTFW_PROTOCOL=`sqlite3 "${WEB_APP_DB_PATH}" "${rule}"`
+
+            # If user select: DB_NAT_PORTFW_PROTOCOL = tcp or udp or tcp/udp
+            # case ${DB_NAT_PORTFW_PROTOCOL} in
+            #     "tcp" )
+            #         IPTBL_FILTER_RULES+="-A FORWARD -d ${DB_NAT_PORTFW_IP}/32 -p ${DB_NAT_PORTFW_PROTOCOL} -m ${DB_NAT_PORTFW_PROTOCOL} --dport ${DB_NAT_PORTFW_INTERNAL} -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT"
+            #         IPTBL_FILTER_RULES+=$'\n'
+            #         IPTBL_NAT_RULES+="-A PREROUTING -i ${MLB_IFACE} -p ${DB_NAT_PORTFW_PROTOCOL} -m ${DB_NAT_PORTFW_PROTOCOL} --dport ${DB_NAT_PORTFW_PUBLIC} -j DNAT --to-destination ${DB_NAT_PORTFW_IP}:${DB_NAT_PORTFW_INTERNAL}"
+            #         IPTBL_NAT_RULES+=$'\n'
+            #         ;;
+            #     "udp" )
+            #         IPTBL_FILTER_RULES+="-A FORWARD -d ${DB_NAT_PORTFW_IP}/32 -p ${DB_NAT_PORTFW_PROTOCOL} -m ${DB_NAT_PORTFW_PROTOCOL} --dport ${DB_NAT_PORTFW_INTERNAL} -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT"
+            #         IPTBL_FILTER_RULES+=$'\n'
+            #         IPTBL_NAT_RULES+="-A PREROUTING -i ${MLB_IFACE} -p ${DB_NAT_PORTFW_PROTOCOL} -m ${DB_NAT_PORTFW_PROTOCOL} --dport ${DB_NAT_PORTFW_PUBLIC} -j DNAT --to-destination ${DB_NAT_PORTFW_IP}:${DB_NAT_PORTFW_INTERNAL}"
+            #         IPTBL_NAT_RULES+=$'\n'
+            #         ;;
+            #     "tcp/udp" )
+            #         IPTBL_FILTER_RULES+="-A FORWARD -d ${DB_NAT_PORTFW_IP}/32 -p tcp -m tcp --dport ${DB_NAT_PORTFW_INTERNAL} -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT"
+            #         IPTBL_FILTER_RULES+=$'\n'
+            #         IPTBL_FILTER_RULES+="-A FORWARD -d ${DB_NAT_PORTFW_IP}/32 -p udp -m udp --dport ${DB_NAT_PORTFW_INTERNAL} -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT"
+            #         IPTBL_FILTER_RULES+=$'\n'
+
+            #         IPTBL_NAT_RULES+="-A PREROUTING -i ${MLB_IFACE} -p tcp -m tcp --dport ${DB_NAT_PORTFW_PUBLIC} -j DNAT --to-destination ${DB_NAT_PORTFW_IP}:${DB_NAT_PORTFW_INTERNAL}"
+            #         IPTBL_FILTER_RULES+=$'\n'
+            #         IPTBL_NAT_RULES+="-A PREROUTING -i ${MLB_IFACE} -p udp -m udp --dport ${DB_NAT_PORTFW_PUBLIC} -j DNAT --to-destination ${DB_NAT_PORTFW_IP}:${DB_NAT_PORTFW_INTERNAL}"
+            #         IPTBL_NAT_RULES+=$'\n'
+            #     ;;
+            # esac
+
+			IPTBL_FILTER_RULES+="-A FORWARD -d ${DB_NAT_PORTFW_IP}/32 -p ${DB_NAT_PORTFW_PROTOCOL} -m ${DB_NAT_PORTFW_PROTOCOL} --dport ${DB_NAT_PORTFW_INTERNAL} -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT"
+			IPTBL_FILTER_RULES+=$'\n'
+
+			IPTBL_NAT_RULES+="-A PREROUTING -i ${MLB_IFACE} -p ${DB_NAT_PORTFW_PROTOCOL} -m ${DB_NAT_PORTFW_PROTOCOL} --dport ${DB_NAT_PORTFW_PUBLIC} -j DNAT --to-destination ${DB_NAT_PORTFW_IP}:${DB_NAT_PORTFW_INTERNAL}"
+			IPTBL_NAT_RULES+=$'\n'
+		fi
+	done
+
+    ###=============== For LAN iptables settings ===============
+    LAN_AL_HTTP_EN=`sqlite3 "${WEB_APP_DB_PATH}" "select lan_allow_http from service_setting where id=1"`
+    if [ "${LAN_AL_HTTP_EN}" = 0 ]
+    then
+        TMP_ACT="DROP"
+        TMP_RULES="-p tcp -s 0/0 --sport 1024:65535 -d 0/0 --dport 80 -m state --state NEW -j ${TMP_ACT}"
+        IPTBL_FILTER_RULES+="-A INPUT -i eth0 ${TMP_RULES}"
+        IPTBL_FILTER_RULES+=$'\n'
+    else
+        echo "Enable LAN_AL_HTTP!"
+    fi
+
+    LAN_AL_HTTPS_EN=`sqlite3 "${WEB_APP_DB_PATH}" "select lan_allow_https from service_setting where id=1"`
+    if [ "${LAN_AL_HTTPS_EN}" = 0 ]
+    then
+        TMP_ACT="DROP"
+        TMP_RULES="-p tcp -s 0/0 --sport 1024:65535 -d 0/0 --dport 443 -m state --state NEW -j ${TMP_ACT}"
+        IPTBL_FILTER_RULES+="-A INPUT -i ${MLB_IFACE} ${TMP_RULES}"
+        IPTBL_FILTER_RULES+=$'\n'
+    else
+        echo "Enable LAN_AL_HTTPS!"
+    fi
+
+    LAN_AL_SSH_EN=`sqlite3 "${WEB_APP_DB_PATH}" "select lan_allow_ssh from service_setting where id=1"`
+    if [ "${LAN_AL_SSH_EN}" = 0 ]
+    then
+        TMP_ACT="DROP"
+        TMP_RULES="-p tcp -s 0/0 --sport 1024:65535 -d 0/0 --dport 22 -m state --state NEW -j ${TMP_ACT}"
+        IPTBL_FILTER_RULES+="-A INPUT -i eth0 ${TMP_RULES}"
+        IPTBL_FILTER_RULES+=$'\n'
+    else
+        echo "Enable LAN_AL_SSH!"
+    fi
+    ###=========================================================
+
+	IPTBL_FILTER_RULES+="-A FORWARD -i eth0 -o ${MLB_IFACE} -j ACCEPT"
+	IPTBL_FILTER_RULES+=$'\n'
+    ###=======================for ipsec use================================================
+    if [ "${DB_VPN_ACTIVE}" = 1 ]
+    then
+        for indx in ${DB_VPN_POSTROUTING_INDX[@]}
+        do
+            rule="select leftsubnet from vpn where id=${indx}"
+            DB_VPN_LEFT_SUBNET=`sqlite3 "${WEB_APP_DB_PATH}" "${rule}"`
+            IPTBL_NAT_RULES+="-A POSTROUTING -s ${DB_VPN_LEFT_SUBNET} -o ${MLB_IFACE} -m policy --dir out --pol ipsec -j ACCEPT"
+            IPTBL_NAT_RULES+=$'\n'
+            IPTBL_NAT_RULES+="-A POSTROUTING -s ${DB_VPN_LEFT_SUBNET} -o ${MLB_IFACE} -j MASQUERADE"
+            IPTBL_NAT_RULES+=$'\n'
+        done
+    fi
+
+    ###=======================for OpenVPN use==============================================
+    if [ "${DB_OPENVPN_EN}" = 1 ]
+    then
+            IPTBL_NAT_RULES+="-A POSTROUTING -s ${DB_IF_ADDR_IP}/${IF_CIDR} -o tun+ -j MASQUERADE"
+            IPTBL_NAT_RULES+=$'\n'
+    fi
+    ###=======================end==========================================================
+	IPTBL_NAT_RULES+="-A POSTROUTING -o ${MLB_IFACE} -j MASQUERADE"
+	IPTBL_NAT_RULES+=$'\n'
+
+	source gen-iptables-conf.sh
+
+	### gen for wwan. (stupid code)
+	MLB_PPP_NAT_PATH="${MLB_CONF_DIR}/${MLB_WWAN_NAT_CFG}"
+	MLB_IFACE="wwan1"
+	IPTBL_FILTER_RULES=""
+	IPTBL_NAT_RULES=""
+
+    # block/allow new http connection from Public IP/WWAN interface.
+    AL_HTTP_EN=`sqlite3 "${WEB_APP_DB_PATH}" "select wan_allow_http from service_setting where id=1"`
+    if [ "${AL_HTTP_EN}" = 0 ]
+    then
+        TMP_ACT="DROP"
+    else
+        TMP_ACT="ACCEPT"
+    fi
+    TMP_RULES="-p tcp -s 0/0 --sport 1024:65535 -d 0/0 --dport 80 -m state --state NEW -j ${TMP_ACT}"
+    IPTBL_FILTER_RULES+="-A INPUT -i ${MLB_IFACE} ${TMP_RULES}"
+    IPTBL_FILTER_RULES+=$'\n'
+
+    # block/allow new https connection from Public IP/WWAN interface.
+    AL_HTTPS_EN=`sqlite3 "${WEB_APP_DB_PATH}" "select wan_allow_https from service_setting where id=1"`
+    if [ "${AL_HTTPS_EN}" = 0 ]
+    then
+        TMP_ACT="DROP"
+    else
+        TMP_ACT="ACCEPT"
+    fi
+    TMP_RULES="-p tcp -s 0/0 --sport 1024:65535 -d 0/0 --dport 443 -m state --state NEW -j ${TMP_ACT}"
+    IPTBL_FILTER_RULES+="-A INPUT -i ${MLB_IFACE} ${TMP_RULES}"
+    IPTBL_FILTER_RULES+=$'\n'
+
+    # block/allow new ssh connection from Public IP/WWAN interface.
+    AL_SSH_EN=`sqlite3 "${WEB_APP_DB_PATH}" "select wan_allow_ssh from service_setting where id=1"`
+    if [ "${AL_SSH_EN}" = 0 ]
+    then
+        TMP_ACT="DROP"
+    else
+        TMP_ACT="ACCEPT"
+    fi
+    TMP_RULES="-p tcp -s 0/0 --sport 1024:65535 -d 0/0 --dport 22 -m state --state NEW -j ${TMP_ACT}"
+    IPTBL_FILTER_RULES+="-A INPUT -i ${MLB_IFACE} ${TMP_RULES}"
+    IPTBL_FILTER_RULES+=$'\n'
+
+    # blocking new icmp connection from Public IP/WWAN dinterface.
+    DB_AL_PING_EN=`sqlite3 "${WEB_APP_DB_PATH}" "select allow_ping from lan_setting where id=1"`
+    # Default value is not allowed.
+    if [ "${DB_AL_PING_EN}" = 0 ]
+    then
+        TMP_RULES="-p icmp --icmp-type 8 -s 0/0 -d 0/0 -m state --state NEW -j DROP"
+        IPTBL_FILTER_RULES+="-A INPUT -i ${MLB_IFACE} ${TMP_RULES}"
+        IPTBL_FILTER_RULES+=$'\n'
+    fi
+	for indx in {1..32}
+	do
+		rule="select active from port_forwarding where id=${indx}"
+		DB_NAT_PORTFW_EN=`sqlite3 "${WEB_APP_DB_PATH}" "${rule}"`
+		if [ "${DB_NAT_PORTFW_EN}" = 1 ]
+		then
+			rule="select ip from port_forwarding where id=${indx}"
+			DB_NAT_PORTFW_IP=`sqlite3 "${WEB_APP_DB_PATH}" "${rule}"`
+			rule="select public_port from port_forwarding where id=${indx}"
+			DB_NAT_PORTFW_PUBLIC=`sqlite3 "${WEB_APP_DB_PATH}" "${rule}"`
+			rule="select internal_port from port_forwarding where id=${indx}"
+			DB_NAT_PORTFW_INTERNAL=`sqlite3 "${WEB_APP_DB_PATH}" "${rule}"`
+			rule="select protocol from port_forwarding where id=${indx}"
+			DB_NAT_PORTFW_PROTOCOL=`sqlite3 "${WEB_APP_DB_PATH}" "${rule}"`
+
+			IPTBL_FILTER_RULES+="-A FORWARD -d ${DB_NAT_PORTFW_IP}/32 -p ${DB_NAT_PORTFW_PROTOCOL} -m ${DB_NAT_PORTFW_PROTOCOL} --dport ${DB_NAT_PORTFW_INTERNAL} -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT"
+			IPTBL_FILTER_RULES+=$'\n'
+
+			IPTBL_NAT_RULES+="-A PREROUTING -i ${MLB_IFACE} -p ${DB_NAT_PORTFW_PROTOCOL} -m ${DB_NAT_PORTFW_PROTOCOL} --dport ${DB_NAT_PORTFW_PUBLIC} -j DNAT --to-destination ${DB_NAT_PORTFW_IP}:${DB_NAT_PORTFW_INTERNAL}"
+			IPTBL_NAT_RULES+=$'\n'
+		fi
+	done
+
+	###=============== For LAN iptables settings ===============
+    LAN_AL_HTTP_EN=`sqlite3 "${WEB_APP_DB_PATH}" "select lan_allow_http from service_setting where id=1"`
+    if [ "${LAN_AL_HTTP_EN}" = 0 ]
+    then
+        TMP_ACT="DROP"
+        TMP_RULES="-p tcp -s 0/0 --sport 1024:65535 -d 0/0 --dport 80 -m state --state NEW -j ${TMP_ACT}"
+        IPTBL_FILTER_RULES+="-A INPUT -i eth0 ${TMP_RULES}"
+        IPTBL_FILTER_RULES+=$'\n'
+    else
+        echo "Enable LAN_AL_HTTP!"
+    fi
+
+    LAN_AL_HTTPS_EN=`sqlite3 "${WEB_APP_DB_PATH}" "select lan_allow_https from service_setting where id=1"`
+    if [ "${LAN_AL_HTTPS_EN}" = 0 ]
+    then
+        TMP_ACT="DROP"
+        TMP_RULES="-p tcp -s 0/0 --sport 1024:65535 -d 0/0 --dport 443 -m state --state NEW -j ${TMP_ACT}"
+        IPTBL_FILTER_RULES+="-A INPUT -i eth0 ${TMP_RULES}"
+        IPTBL_FILTER_RULES+=$'\n'
+    else
+        echo "Enable LAN_AL_HTTPS!"
+    fi
+
+    LAN_AL_SSH_EN=`sqlite3 "${WEB_APP_DB_PATH}" "select lan_allow_ssh from service_setting where id=1"`
+    if [ "${LAN_AL_SSH_EN}" = 0 ]
+    then
+        TMP_ACT="DROP"
+        TMP_RULES="-p tcp -s 0/0 --sport 1024:65535 -d 0/0 --dport 22 -m state --state NEW -j ${TMP_ACT}"
+        IPTBL_FILTER_RULES+="-A INPUT -i eth0 ${TMP_RULES}"
+        IPTBL_FILTER_RULES+=$'\n'
+    else
+        echo "Enable LAN_AL_SSH!"
+    fi
+    ###=========================================================
+
+	IPTBL_FILTER_RULES+="-A FORWARD -i eth0 -o ${MLB_IFACE} -j ACCEPT"
+	IPTBL_FILTER_RULES+=$'\n'
+    ###=======================for ipsec use================================================
+    if [ "${DB_VPN_ACTIVE}" = 1 ]
+    then
+        echo DB_VPN_ACTIVE = ${DB_VPN_ACTIVE}
+        echo DB_VPN_POSTROUTING_INDX = ${DB_VPN_POSTROUTING_INDX}
+        for indx in ${DB_VPN_POSTROUTING_INDX[@]}
+        do
+            rule="select leftsubnet from vpn where id=${indx}"
+            DB_VPN_LEFT_SUBNET=`sqlite3 "${WEB_APP_DB_PATH}" "${rule}"`
+            IPTBL_NAT_RULES+="-A POSTROUTING -s ${DB_VPN_LEFT_SUBNET} -o ${MLB_IFACE} -m policy --dir out --pol ipsec -j ACCEPT"
+            IPTBL_NAT_RULES+=$'\n'
+            IPTBL_NAT_RULES+="-A POSTROUTING -s ${DB_VPN_LEFT_SUBNET} -o ${MLB_IFACE} -j MASQUERADE"
+            IPTBL_NAT_RULES+=$'\n'
+        done
+    fi
+    ###=======================for OpenVPN use==============================================
+    if [ "${DB_OPENVPN_EN}" = 1 ]
+    then
+            IPTBL_NAT_RULES+="-A POSTROUTING -s ${DB_IF_ADDR_IP}/${IF_CIDR} -o tun+ -j MASQUERADE"
+            IPTBL_NAT_RULES+=$'\n'
+    fi
+    ###=======================end==========================================================
+	IPTBL_NAT_RULES+="-A POSTROUTING -o ${MLB_IFACE} -j MASQUERADE"
+	IPTBL_NAT_RULES+=$'\n'
+	source gen-iptables-conf.sh
+
+	MLB_PPP_NAT_PATH="${BACKUP_PATH}"
 
 fi
 

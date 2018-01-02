@@ -23,7 +23,7 @@ def clearProcess():
         os.system('/bin/sync')
         os.system('/bin/sync')
 
-    _date = time.strftime("%Y%m%d", time.localtime())
+    _date = time.strftime("%Y%m%d-%H%M%S", time.localtime())
     _log_path_bak = '/opt/log/fwUpdate_{}.log'.format(_date)
     _cmd = '/bin/mv {} {}'.format(LOG_PATH, _log_path_bak)
 
@@ -47,6 +47,8 @@ def main():
         log.error('Cannot remove old files.')
         sys.exit(1)
     else:
+        os.system('/bin/sync')
+        os.system('/bin/sync')
         log.info('Remove all files under {}'.format(os.environ['MLB_DIR']))
 
     ''' Untar and do firmware update. '''
