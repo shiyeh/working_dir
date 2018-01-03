@@ -358,45 +358,29 @@ then
 		then
 			rule="select ip from port_forwarding where id=${indx}"
 			DB_NAT_PORTFW_IP=`sqlite3 "${WEB_APP_DB_PATH}" "${rule}"`
+
 			rule="select public_port from port_forwarding where id=${indx}"
 			DB_NAT_PORTFW_PUBLIC=`sqlite3 "${WEB_APP_DB_PATH}" "${rule}"`
 			rule="select internal_port from port_forwarding where id=${indx}"
 			DB_NAT_PORTFW_INTERNAL=`sqlite3 "${WEB_APP_DB_PATH}" "${rule}"`
-			rule="select protocol from port_forwarding where id=${indx}"
-			DB_NAT_PORTFW_PROTOCOL=`sqlite3 "${WEB_APP_DB_PATH}" "${rule}"`
+            OIFS="$IFS"
+            IFS="-"
+            read -a PUBLIC_LIST <<< "${DB_NAT_PORTFW_PUBLIC}"
+            read -a INTERNAL_LIST <<< "${DB_NAT_PORTFW_INTERNAL}"
+            IFS="$OIFS"
 
-            # If user select: DB_NAT_PORTFW_PROTOCOL = tcp or udp or tcp/udp
-            # case ${DB_NAT_PORTFW_PROTOCOL} in
-            #     "tcp" )
-            #         IPTBL_FILTER_RULES+="-A FORWARD -d ${DB_NAT_PORTFW_IP}/32 -p ${DB_NAT_PORTFW_PROTOCOL} -m ${DB_NAT_PORTFW_PROTOCOL} --dport ${DB_NAT_PORTFW_INTERNAL} -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT"
-            #         IPTBL_FILTER_RULES+=$'\n'
-            #         IPTBL_NAT_RULES+="-A PREROUTING -i ${MLB_IFACE} -p ${DB_NAT_PORTFW_PROTOCOL} -m ${DB_NAT_PORTFW_PROTOCOL} --dport ${DB_NAT_PORTFW_PUBLIC} -j DNAT --to-destination ${DB_NAT_PORTFW_IP}:${DB_NAT_PORTFW_INTERNAL}"
-            #         IPTBL_NAT_RULES+=$'\n'
-            #         ;;
-            #     "udp" )
-            #         IPTBL_FILTER_RULES+="-A FORWARD -d ${DB_NAT_PORTFW_IP}/32 -p ${DB_NAT_PORTFW_PROTOCOL} -m ${DB_NAT_PORTFW_PROTOCOL} --dport ${DB_NAT_PORTFW_INTERNAL} -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT"
-            #         IPTBL_FILTER_RULES+=$'\n'
-            #         IPTBL_NAT_RULES+="-A PREROUTING -i ${MLB_IFACE} -p ${DB_NAT_PORTFW_PROTOCOL} -m ${DB_NAT_PORTFW_PROTOCOL} --dport ${DB_NAT_PORTFW_PUBLIC} -j DNAT --to-destination ${DB_NAT_PORTFW_IP}:${DB_NAT_PORTFW_INTERNAL}"
-            #         IPTBL_NAT_RULES+=$'\n'
-            #         ;;
-            #     "tcp/udp" )
-            #         IPTBL_FILTER_RULES+="-A FORWARD -d ${DB_NAT_PORTFW_IP}/32 -p tcp -m tcp --dport ${DB_NAT_PORTFW_INTERNAL} -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT"
-            #         IPTBL_FILTER_RULES+=$'\n'
-            #         IPTBL_FILTER_RULES+="-A FORWARD -d ${DB_NAT_PORTFW_IP}/32 -p udp -m udp --dport ${DB_NAT_PORTFW_INTERNAL} -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT"
-            #         IPTBL_FILTER_RULES+=$'\n'
+            rule="select protocol from port_forwarding where id=${indx}"
+			DB_NAT_PORTFW_PROTOCOLS=`sqlite3 "${WEB_APP_DB_PATH}" "${rule}"`
 
-            #         IPTBL_NAT_RULES+="-A PREROUTING -i ${MLB_IFACE} -p tcp -m tcp --dport ${DB_NAT_PORTFW_PUBLIC} -j DNAT --to-destination ${DB_NAT_PORTFW_IP}:${DB_NAT_PORTFW_INTERNAL}"
-            #         IPTBL_FILTER_RULES+=$'\n'
-            #         IPTBL_NAT_RULES+="-A PREROUTING -i ${MLB_IFACE} -p udp -m udp --dport ${DB_NAT_PORTFW_PUBLIC} -j DNAT --to-destination ${DB_NAT_PORTFW_IP}:${DB_NAT_PORTFW_INTERNAL}"
-            #         IPTBL_NAT_RULES+=$'\n'
-            #     ;;
-            # esac
-
-			IPTBL_FILTER_RULES+="-A FORWARD -d ${DB_NAT_PORTFW_IP}/32 -p ${DB_NAT_PORTFW_PROTOCOL} -m ${DB_NAT_PORTFW_PROTOCOL} --dport ${DB_NAT_PORTFW_INTERNAL} -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT"
-			IPTBL_FILTER_RULES+=$'\n'
-
-			IPTBL_NAT_RULES+="-A PREROUTING -i ${MLB_IFACE} -p ${DB_NAT_PORTFW_PROTOCOL} -m ${DB_NAT_PORTFW_PROTOCOL} --dport ${DB_NAT_PORTFW_PUBLIC} -j DNAT --to-destination ${DB_NAT_PORTFW_IP}:${DB_NAT_PORTFW_INTERNAL}"
-			IPTBL_NAT_RULES+=$'\n'
+            OIFS="$IFS"
+            IFS="/"
+            for DB_NAT_PORTFW_PROTOCOL in $DB_NAT_PORTFW_PROTOCOLS; do
+                IPTBL_FILTER_RULES+="-A FORWARD -d ${DB_NAT_PORTFW_IP}/32 -p ${DB_NAT_PORTFW_PROTOCOL} -m ${DB_NAT_PORTFW_PROTOCOL} --dport ${INTERNAL_LIST[0]}:${INTERNAL_LIST[1]} -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT"
+			    IPTBL_FILTER_RULES+=$'\n'
+			    IPTBL_NAT_RULES+="-A PREROUTING -i ${MLB_IFACE} -p ${DB_NAT_PORTFW_PROTOCOL} -m ${DB_NAT_PORTFW_PROTOCOL} --dport ${PUBLIC_LIST[0]}:${PUBLIC_LIST[1]} -j DNAT --to-destination ${DB_NAT_PORTFW_IP}:${INTERNAL_LIST[0]}-${INTERNAL_LIST[1]}"
+			    IPTBL_NAT_RULES+=$'\n'
+            done
+            IFS="$OIFS"
 		fi
 	done
 
@@ -520,20 +504,45 @@ then
 		DB_NAT_PORTFW_EN=`sqlite3 "${WEB_APP_DB_PATH}" "${rule}"`
 		if [ "${DB_NAT_PORTFW_EN}" = 1 ]
 		then
-			rule="select ip from port_forwarding where id=${indx}"
-			DB_NAT_PORTFW_IP=`sqlite3 "${WEB_APP_DB_PATH}" "${rule}"`
-			rule="select public_port from port_forwarding where id=${indx}"
-			DB_NAT_PORTFW_PUBLIC=`sqlite3 "${WEB_APP_DB_PATH}" "${rule}"`
-			rule="select internal_port from port_forwarding where id=${indx}"
-			DB_NAT_PORTFW_INTERNAL=`sqlite3 "${WEB_APP_DB_PATH}" "${rule}"`
-			rule="select protocol from port_forwarding where id=${indx}"
-			DB_NAT_PORTFW_PROTOCOL=`sqlite3 "${WEB_APP_DB_PATH}" "${rule}"`
+			# rule="select ip from port_forwarding where id=${indx}"
+			# DB_NAT_PORTFW_IP=`sqlite3 "${WEB_APP_DB_PATH}" "${rule}"`
+			# rule="select public_port from port_forwarding where id=${indx}"
+			# DB_NAT_PORTFW_PUBLIC=`sqlite3 "${WEB_APP_DB_PATH}" "${rule}"`
+			# rule="select internal_port from port_forwarding where id=${indx}"
+			# DB_NAT_PORTFW_INTERNAL=`sqlite3 "${WEB_APP_DB_PATH}" "${rule}"`
+			# rule="select protocol from port_forwarding where id=${indx}"
+			# DB_NAT_PORTFW_PROTOCOL=`sqlite3 "${WEB_APP_DB_PATH}" "${rule}"`
 
-			IPTBL_FILTER_RULES+="-A FORWARD -d ${DB_NAT_PORTFW_IP}/32 -p ${DB_NAT_PORTFW_PROTOCOL} -m ${DB_NAT_PORTFW_PROTOCOL} --dport ${DB_NAT_PORTFW_INTERNAL} -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT"
-			IPTBL_FILTER_RULES+=$'\n'
+			# IPTBL_FILTER_RULES+="-A FORWARD -d ${DB_NAT_PORTFW_IP}/32 -p ${DB_NAT_PORTFW_PROTOCOL} -m ${DB_NAT_PORTFW_PROTOCOL} --dport ${DB_NAT_PORTFW_INTERNAL} -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT"
+			# IPTBL_FILTER_RULES+=$'\n'
 
-			IPTBL_NAT_RULES+="-A PREROUTING -i ${MLB_IFACE} -p ${DB_NAT_PORTFW_PROTOCOL} -m ${DB_NAT_PORTFW_PROTOCOL} --dport ${DB_NAT_PORTFW_PUBLIC} -j DNAT --to-destination ${DB_NAT_PORTFW_IP}:${DB_NAT_PORTFW_INTERNAL}"
-			IPTBL_NAT_RULES+=$'\n'
+			# IPTBL_NAT_RULES+="-A PREROUTING -i ${MLB_IFACE} -p ${DB_NAT_PORTFW_PROTOCOL} -m ${DB_NAT_PORTFW_PROTOCOL} --dport ${DB_NAT_PORTFW_PUBLIC} -j DNAT --to-destination ${DB_NAT_PORTFW_IP}:${DB_NAT_PORTFW_INTERNAL}"
+			# IPTBL_NAT_RULES+=$'\n'
+            rule="select ip from port_forwarding where id=${indx}"
+            DB_NAT_PORTFW_IP=`sqlite3 "${WEB_APP_DB_PATH}" "${rule}"`
+
+            rule="select public_port from port_forwarding where id=${indx}"
+            DB_NAT_PORTFW_PUBLIC=`sqlite3 "${WEB_APP_DB_PATH}" "${rule}"`
+            rule="select internal_port from port_forwarding where id=${indx}"
+            DB_NAT_PORTFW_INTERNAL=`sqlite3 "${WEB_APP_DB_PATH}" "${rule}"`
+            OIFS="$IFS"
+            IFS="-"
+            read -a PUBLIC_LIST <<< "${DB_NAT_PORTFW_PUBLIC}"
+            read -a INTERNAL_LIST <<< "${DB_NAT_PORTFW_INTERNAL}"
+            IFS="$OIFS"
+
+            rule="select protocol from port_forwarding where id=${indx}"
+            DB_NAT_PORTFW_PROTOCOLS=`sqlite3 "${WEB_APP_DB_PATH}" "${rule}"`
+
+            OIFS="$IFS"
+            IFS="/"
+            for DB_NAT_PORTFW_PROTOCOL in $DB_NAT_PORTFW_PROTOCOLS; do
+                IPTBL_FILTER_RULES+="-A FORWARD -d ${DB_NAT_PORTFW_IP}/32 -p ${DB_NAT_PORTFW_PROTOCOL} -m ${DB_NAT_PORTFW_PROTOCOL} --dport ${INTERNAL_LIST[0]}:${INTERNAL_LIST[1]} -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT"
+                IPTBL_FILTER_RULES+=$'\n'
+                IPTBL_NAT_RULES+="-A PREROUTING -i ${MLB_IFACE} -p ${DB_NAT_PORTFW_PROTOCOL} -m ${DB_NAT_PORTFW_PROTOCOL} --dport ${PUBLIC_LIST[0]}:${PUBLIC_LIST[1]} -j DNAT --to-destination ${DB_NAT_PORTFW_IP}:${INTERNAL_LIST[0]}-${INTERNAL_LIST[1]}"
+                IPTBL_NAT_RULES+=$'\n'
+            done
+            IFS="$OIFS"
 		fi
 	done
 
