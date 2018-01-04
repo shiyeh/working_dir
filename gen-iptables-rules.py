@@ -35,7 +35,7 @@ class genTable(object):
         con = sqlite3.connect(os.environ['WEB_APP_DB_PATH'])
         cur = con.cursor()
 
-        for indx in xrange(1, 6):
+        for indx in xrange(1, 32):
             DB_NAT_PORTFW_EN = cur.execute("select active from port_forwarding where id=(?);", (indx,)).fetchone()[0]
             log.debug('DB_NAT_PORTFW_EN = {}'.format(DB_NAT_PORTFW_EN))
 
@@ -44,21 +44,25 @@ class genTable(object):
                 DB_NAT_PORTFW_IP = cur.execute(rule, (indx,)).fetchone()[0]
                 rule = 'select public_port from port_forwarding where id=(?)'
                 DB_NAT_PORTFW_PUBLIC = cur.execute(rule, (indx,)).fetchone()[0]
+                PUBLIC_LIST = DB_NAT_PORTFW_PUBLIC.split('-')
                 rule = 'select internal_port from port_forwarding where id=(?)'
                 DB_NAT_PORTFW_INTERNAL = cur.execute(rule, (indx,)).fetchone()[0]
+                INTERNAL_LIST = DB_NAT_PORTFW_INTERNAL.split('-')
                 rule = 'select protocol from port_forwarding where id=(?)'
-                DB_NAT_PORTFW_PROTOCOL = cur.execute(rule, (indx,)).fetchone()[0]
+                DB_NAT_PORTFW_PROTOCOLS = cur.execute(rule, (indx,)).fetchone()[0]
 
                 # IPTBL_FILTER_RULES += "-A FORWARD -d %s/32 -p %s -m %s --dport %s " % (DB_NAT_PORTFW_IP, DB_NAT_PORTFW_PROTOCOL, DB_NAT_PORTFW_PROTOCOL, DB_NAT_PORTFW_INTERNAL)
-                IPTBL_FILTER_RULES += "-A FORWARD -d {}/32 -p {} -m {} --dport {} ".format(DB_NAT_PORTFW_IP,
-                                                                                           DB_NAT_PORTFW_PROTOCOL,
-                                                                                           DB_NAT_PORTFW_PROTOCOL,
-                                                                                           DB_NAT_PORTFW_INTERNAL)
-                IPTBL_FILTER_RULES += "-m state --state NEW,RELATED,ESTABLISHED -j ACCEPT"
-                IPTBL_FILTER_RULES += '\n'
+                PROTOCOL_LIST = DB_NAT_PORTFW_PROTOCOLS.split('/')
+                for DB_NAT_PORTFW_PROTOCOL in PROTOCOL_LIST:
+                    IPTBL_FILTER_RULES += "-A FORWARD -d {}/32 -p {} -m {} --dport {} ".format(DB_NAT_PORTFW_IP,
+                                                                                               DB_NAT_PORTFW_PROTOCOL,
+                                                                                               DB_NAT_PORTFW_PROTOCOL,
+                                                                                               DB_NAT_PORTFW_INTERNAL)
+                    IPTBL_FILTER_RULES += "-m state --state NEW,RELATED,ESTABLISHED -j ACCEPT"
+                    IPTBL_FILTER_RULES += '\n'
 
-                IPTBL_NAT_RULES += "-A PREROUTING -i {} -p {} -m {} --dport {} -j DNAT --to-destination {}:{}".format(os.environ["MLB_IFACE"], DB_NAT_PORTFW_PROTOCOL, DB_NAT_PORTFW_PROTOCOL, DB_NAT_PORTFW_PUBLIC, DB_NAT_PORTFW_IP, DB_NAT_PORTFW_INTERNAL)
-                IPTBL_NAT_RULES += '\n'
+                    IPTBL_NAT_RULES += "-A PREROUTING -i {} -p {} -m {} --dport {} -j DNAT --to-destination {}:{}".format(os.environ["MLB_IFACE"], DB_NAT_PORTFW_PROTOCOL, DB_NAT_PORTFW_PROTOCOL, DB_NAT_PORTFW_PUBLIC, DB_NAT_PORTFW_IP, DB_NAT_PORTFW_INTERNAL)
+                    IPTBL_NAT_RULES += '\n'
         con.close()
 
     def lanForwarding(self):
@@ -283,7 +287,7 @@ def runGenRule():
 def main():
     os.environ["MLB_IFACE"] = ""
 
-    ''' Do runGenRule() while MLB_IFACE = wwan1 and ppp0'''
+    ''' Do runGenRule() while MLB_IFACE = wwan1 and ppp0 '''
     for os.environ["MLB_IFACE"] in ["wwan1", "ppp0"]:
         if os.environ["MLB_IFACE"] == "wwan1":
             tmp = ""
