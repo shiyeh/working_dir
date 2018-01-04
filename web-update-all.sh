@@ -381,23 +381,24 @@ if [ -f "${WEB_APP_DB_PATH}" ]; then
                 read -a INTERNAL_TMP <<< "${DB_NAT_PORTFW_INTERNAL}"
                 IFS="$OIFS"
 
-                if [ "${#PUBLIC_TMP[@]}" = 2 ]; then
-                    DB_NAT_PORTFW_PUBLIC="${PUBLIC_TMP[0]}:${PUBLIC_TMP[1]}"
-                fi
-                if [ "${#INTERNAL_TMP[@]}" = 2 ]; then
-                    DB_NAT_PORTFW_INTERNAL="${INTERNAL_TMP[0]}-${INTERNAL_TMP[1]}"
-                fi
-
                 rule="select protocol from port_forwarding where id=${indx}"
                 DB_NAT_PORTFW_PROTOCOLS=`sqlite3 "${WEB_APP_DB_PATH}" "${rule}"`
 
                 OIFS="$IFS"
                 IFS="/"
                 for DB_NAT_PORTFW_PROTOCOL in $DB_NAT_PORTFW_PROTOCOLS; do
-                    IPTBL_FILTER_RULES+="-A FORWARD -d ${DB_NAT_PORTFW_IP}/32 -p ${DB_NAT_PORTFW_PROTOCOL} -m ${DB_NAT_PORTFW_PROTOCOL} --dport ${DB_NAT_PORTFW_PUBLIC} -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT"
-                    IPTBL_FILTER_RULES+=$'\n'
-                    IPTBL_NAT_RULES+="-A PREROUTING -i ${MLB_IFACE} -p ${DB_NAT_PORTFW_PROTOCOL} -m ${DB_NAT_PORTFW_PROTOCOL} --dport ${DB_NAT_PORTFW_PUBLIC} -j DNAT --to-destination ${DB_NAT_PORTFW_IP}:${DB_NAT_PORTFW_INTERNAL}"
-                    IPTBL_NAT_RULES+=$'\n'
+                    if [ "${#PUBLIC_TMP[@]}" = 2 ] || [ "${#INTERNAL_TMP[@]}" = 2 ]; then
+                        # DB_NAT_PORTFW_PUBLIC="${PUBLIC_TMP[0]}:${PUBLIC_TMP[1]}"
+                        IPTBL_FILTER_RULES+="-A FORWARD -d ${DB_NAT_PORTFW_IP}/32 -p ${DB_NAT_PORTFW_PROTOCOL} -m ${DB_NAT_PORTFW_PROTOCOL} --dport ${INTERNAL_TMP[0]}:${INTERNAL_TMP[1]} -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT"
+                        IPTBL_FILTER_RULES+=$'\n'
+                        IPTBL_NAT_RULES+="-A PREROUTING -i ${MLB_IFACE} -p ${DB_NAT_PORTFW_PROTOCOL} -m ${DB_NAT_PORTFW_PROTOCOL} --dport ${PUBLIC_TMP[0]}:${PUBLIC_TMP[1]} -j DNAT --to-destination ${DB_NAT_PORTFW_IP}:${INTERNAL_TMP[0]}-${INTERNAL_TMP[1]}"
+                        IPTBL_NAT_RULES+=$'\n'
+                    else
+                        IPTBL_FILTER_RULES+="-A FORWARD -d ${DB_NAT_PORTFW_IP}/32 -p ${DB_NAT_PORTFW_PROTOCOL} -m ${DB_NAT_PORTFW_PROTOCOL} --dport ${DB_NAT_PORTFW_INTERNAL} -m state --state NEW,RELATED,ESTABLISHED -j ACCEPT"
+                        IPTBL_FILTER_RULES+=$'\n'
+                        IPTBL_NAT_RULES+="-A PREROUTING -i ${MLB_IFACE} -p ${DB_NAT_PORTFW_PROTOCOL} -m ${DB_NAT_PORTFW_PROTOCOL} --dport ${DB_NAT_PORTFW_PUBLIC} -j DNAT --to-destination ${DB_NAT_PORTFW_IP}:${DB_NAT_PORTFW_INTERNAL}"
+                        IPTBL_NAT_RULES+=$'\n'
+                    fi
                 done
                 IFS="$OIFS"
     		fi

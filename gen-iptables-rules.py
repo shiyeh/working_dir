@@ -51,18 +51,41 @@ class genTable(object):
                 rule = 'select protocol from port_forwarding where id=(?)'
                 DB_NAT_PORTFW_PROTOCOLS = cur.execute(rule, (indx,)).fetchone()[0]
 
-                # IPTBL_FILTER_RULES += "-A FORWARD -d %s/32 -p %s -m %s --dport %s " % (DB_NAT_PORTFW_IP, DB_NAT_PORTFW_PROTOCOL, DB_NAT_PORTFW_PROTOCOL, DB_NAT_PORTFW_INTERNAL)
                 PROTOCOL_LIST = DB_NAT_PORTFW_PROTOCOLS.split('/')
                 for DB_NAT_PORTFW_PROTOCOL in PROTOCOL_LIST:
-                    IPTBL_FILTER_RULES += "-A FORWARD -d {}/32 -p {} -m {} --dport {} ".format(DB_NAT_PORTFW_IP,
-                                                                                               DB_NAT_PORTFW_PROTOCOL,
-                                                                                               DB_NAT_PORTFW_PROTOCOL,
-                                                                                               DB_NAT_PORTFW_INTERNAL)
-                    IPTBL_FILTER_RULES += "-m state --state NEW,RELATED,ESTABLISHED -j ACCEPT"
-                    IPTBL_FILTER_RULES += '\n'
+                    if len(PUBLIC_LIST) == 1 or len(INTERNAL_LIST) == 1:
+                        IPTBL_FILTER_RULES += "-A FORWARD -d {}/32 -p {} -m {} --dport {} ".format(DB_NAT_PORTFW_IP,
+                                                                                                   DB_NAT_PORTFW_PROTOCOL,
+                                                                                                   DB_NAT_PORTFW_PROTOCOL,
+                                                                                                   DB_NAT_PORTFW_INTERNAL)
+                        IPTBL_FILTER_RULES += "-m state --state NEW,RELATED,ESTABLISHED -j ACCEPT"
+                        IPTBL_FILTER_RULES += '\n'
 
-                    IPTBL_NAT_RULES += "-A PREROUTING -i {} -p {} -m {} --dport {} -j DNAT --to-destination {}:{}".format(os.environ["MLB_IFACE"], DB_NAT_PORTFW_PROTOCOL, DB_NAT_PORTFW_PROTOCOL, DB_NAT_PORTFW_PUBLIC, DB_NAT_PORTFW_IP, DB_NAT_PORTFW_INTERNAL)
-                    IPTBL_NAT_RULES += '\n'
+                        IPTBL_NAT_RULES += "-A PREROUTING -i {} -p {} -m {} --dport {} -j DNAT --to-destination {}:{}".format(os.environ["MLB_IFACE"],
+                                                                                                                              DB_NAT_PORTFW_PROTOCOL,
+                                                                                                                              DB_NAT_PORTFW_PROTOCOL,
+                                                                                                                              DB_NAT_PORTFW_PUBLIC,
+                                                                                                                              DB_NAT_PORTFW_IP,
+                                                                                                                              DB_NAT_PORTFW_INTERNAL)
+                        IPTBL_NAT_RULES += '\n'
+                    else:
+                        IPTBL_FILTER_RULES += "-A FORWARD -d {}/32 -p {} -m {} --dport {}:{} ".format(DB_NAT_PORTFW_IP,
+                                                                                                   DB_NAT_PORTFW_PROTOCOL,
+                                                                                                   DB_NAT_PORTFW_PROTOCOL,
+                                                                                                   INTERNAL_LIST[0],
+                                                                                                   INTERNAL_LIST[1])
+                        IPTBL_FILTER_RULES += "-m state --state NEW,RELATED,ESTABLISHED -j ACCEPT"
+                        IPTBL_FILTER_RULES += '\n'
+
+                        IPTBL_NAT_RULES += "-A PREROUTING -i {} -p {} -m {} --dport {}:{} -j DNAT --to-destination {}:{}-{}".format(os.environ["MLB_IFACE"],
+                                                                                                                              DB_NAT_PORTFW_PROTOCOL,
+                                                                                                                              DB_NAT_PORTFW_PROTOCOL,
+                                                                                                                              PUBLIC_LIST[0],
+                                                                                                                              PUBLIC_LIST[1],
+                                                                                                                              DB_NAT_PORTFW_IP,
+                                                                                                                              INTERNAL_LIST[0],
+                                                                                                                              INTERNAL_LIST[1])
+                        IPTBL_NAT_RULES += '\n'
         con.close()
 
     def lanForwarding(self):
