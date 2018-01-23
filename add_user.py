@@ -32,8 +32,14 @@ def modUserProfile(userName):
         try:
             with open(filePath, 'a+') as f:
                 tmp = '\n'
-                tmp += 'if [ -f /opt/mlis/web_console/cli/main.py ]; then\n'
-                tmp += '    /usr/bin/python /opt/mlis/web_console/cli/main.py\n'
+                tmp += 'allow_cli=`sqlite3 "/tmp/app.db" "select allow_cli from service_setting;"`\n'
+                tmp += 'if [ "${allow_cli}"  = 0 ]; then\n'
+                tmp += '    echo "Not allow ssh-cli..."\n'
+                tmp += '    exit 1\n'
+                tmp += 'fi\n'
+                tmp += '\n'
+                tmp += 'if [ -f /opt/mlis/txt_console/console.py ]; then\n'
+                tmp += '    /usr/bin/python /opt/mlis/txt_console/console.py\n'
                 tmp += '    exit 0\n'
                 tmp += 'fi\n'
 
@@ -50,7 +56,8 @@ def modUserProfile(userName):
 def addUser(userName, passWord):
     homePath = '/home/%s' % (userName)
 
-    p1 = Popen(['/usr/sbin/useradd', '-m', '-d', homePath, userName], stdout=PIPE, stderr=PIPE)
+    p1 = Popen(['/usr/sbin/useradd', '-m', '-d',
+                homePath, userName, '-G', 'root,shutdown'], stdout=PIPE, stderr=PIPE)
     out, err = p1.communicate()
     if p1.returncode != 0:
         raise Exception(err.strip())
@@ -92,6 +99,6 @@ def main():
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.NOTSET, filename='/tmp/addUser.log',
+    logging.basicConfig(level=logging.NOTSET, filename='/opt/log/addUser.log',
                         format='%(asctime)s %(levelname)s: %(message)s')
     main()

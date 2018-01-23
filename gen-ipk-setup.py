@@ -11,11 +11,12 @@ LOG_PATH = '/tmp/gen-ipk.log'
 
 
 def genSetup(_OPKG_INSTALLATION, _OPKG_REMOVE):
-    if not os.path.isdir('{}/pkg'.format(os.environ['MLB_DIR'])):
-        log.error('The path {}/pkg not found.'.format(os.environ['MLB_DIR']))
+    pkgDir = os.environ['MLB_DIR'] + '/pkg'
+    if not os.path.isdir(pkgDir):
+        log.error('The path {} not found.'.format(pkgDir))
     else:
-        # with open('{}/pkg/setup.sh'.format(os.environ['MLB_DIR'])) as f:
-        with open('/home/leo/setup.sh', 'w+') as f:
+        with open('{}/pkg/setup.sh'.format(os.environ['MLB_DIR']), 'w+') as f:
+        # with open('/home/root/setup.sh', 'w+') as f:
             tmp = '#!/bin/sh' + '\n'
             tmp += '\n'
             tmp += _OPKG_INSTALLATION
@@ -36,19 +37,20 @@ def main():
     _OPKG_INSTALLATION += OPKG_INSTALL_CMD + ' '
     _OPKG_REMOVE += OPKG_DELPKG_CMD + ' '
 
-    # os.chdir(os.environ['MLB_DIR'])
+    os.chdir(os.environ['MLB_DIR']+'/pkg')
+    _filter = glob.glob('*.ipk')
+    # os.chdir('/home/root/ipk/ipk-perl_for_ddns')
     # _filter = glob.glob('*.ipk')
-    os.chdir('/home/leo/working_dir')
-    _filter = glob.glob('*.py')
+
+    if not _filter:
+        log.error('Not found any ipk file. Exited.')
+        print "Not found any ipk file. Exited."
+        sys.exit(1)
 
     for entry in _filter:
-        if entry == _filter:
-            log.error('Not found any ipk file. Exited.')
-            sys.exit(1)
-        else:
-            log.info('Found ipk files.')
-            _OPKG_INSTALLATION += "{} ".format(entry)
-            _OPKG_REMOVE += "{} ".format(entry)
+        log.info('IPK file found: {}'.format(entry))
+        _OPKG_INSTALLATION += "{} ".format(entry)
+        _OPKG_REMOVE += "{} ".format(entry)
 
     print('''*******
 {}
