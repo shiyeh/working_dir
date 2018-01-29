@@ -3,8 +3,7 @@ OPKG_INSTALL_CMD="/usr/bin/opkg install"
 OPKG_DELPKG_CMD="rm -f"
 _OPKG_INSTALLATION=""
 _OPKG_REMOVE=""
-# _filter="1.ipk 2.ipk 3.ipk"
-_filter="123"
+_filter="${MLB_DIR}/pkg/*.ipk"
 
 _OPKG_INSTALLATION+="${OPKG_INSTALL_CMD} "
 _OPKG_REMOVE+="${OPKG_DELPKG_CMD} "
@@ -33,7 +32,7 @@ echo "****"
 
 ### Generate /opt/mlis/pkg/setup.sh file.
 
-cat > "/home/leo/working_dir/pkg/setup.sh" << EOL
+cat > "${MLB_DIR}/pkg/setup.sh" << EOL
 #!/bin/sh
 
 ${_OPKG_INSTALLATION}

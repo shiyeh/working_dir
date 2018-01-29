@@ -12,8 +12,8 @@ from subprocess import Popen, PIPE
 
 log = logging.getLogger(__name__)
 LOG_PATH = '/tmp/fwUpdate.log'
-SRC_FILE = '/tmp/mlis.tar.gz'
-MD5_FILE = '/tmp/md5'
+SRC_FILE = '/opt/mlis.tar.gz'
+MD5_FILE = '/opt/md5'
 
 
 def killProcess():
@@ -49,6 +49,8 @@ def cancelProcess():
     except Exception:
         pass
     finally:
+        os.system('/bin/sync')
+        os.system('/bin/sync')
         sys.exit(1)
 
 
@@ -76,11 +78,10 @@ def main():
 
     ''' Untar the file XXX.fw to /tmp '''
     try:
-        p = Popen(['/bin/tar', '-xvpf', fwPath, '-C', '/tmp/'], stdout=PIPE, stderr=PIPE)
+        p = Popen(['/bin/tar', '-xvpf', fwPath, '-C', '/opt/'], stdout=PIPE, stderr=PIPE)
         fwFile, err = p.communicate()
         if p.returncode != 0:
             raise Exception(err.strip())
-        # log.info('Untar the file: %s' % (fwFile))
     except Exception as e:
         log.error(e)
         cancelProcess()

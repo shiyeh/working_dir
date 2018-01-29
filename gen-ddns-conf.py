@@ -1,5 +1,4 @@
 #!/usr/bin/python
-
 import os
 import sys
 import sqlite3
@@ -22,6 +21,9 @@ def genDdnsConf(protocol, host, user, pwd):
         server = u'dynupdate.no-ip.com'
     elif protocol == 'dyndns2':
         server = u'members.dyndns.org'
+    else:
+        log.debug('No protocol: {}'.format(protocol))
+        return False
 
     # Here is just for No-IP configuration
     with open(ddclient_conf, 'w+') as f:
