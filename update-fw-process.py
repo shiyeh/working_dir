@@ -6,11 +6,15 @@ import time
 import init_env
 import subprocess
 from subprocess import Popen, PIPE
+import socket
+import json
+from db_sender import db_export
 
 log = logging.getLogger(__name__)
 LOG_PATH = '/tmp/fwUpdate.log'
 MLIS_FILE = '/opt/mlis.tar.gz'
 MD5_FILE = '/opt/md5'
+BAK_DIR = '/opt/backup'
 
 
 def clearProcess():
@@ -47,12 +51,24 @@ def main():
         log.error('{} not found'.format(MLIS_FILE))
         sys.exit(1)
 
-    ''' Backup older firmware files '''
-    _fw_bak_path = '/opt/mlis.old'
-    if os.path.isdir(_fw_bak_path):
-        _cmd = 'rm -rf ' + _fw_bak_path
+    ''' Back up older firmware files '''
+    if os.path.isdir(BAK_DIR):
+        _cmd = 'rm -rf ' + BAK_DIR
         os.system(_cmd)
-    _cmd = 'cp -a ' + os.environ['MLB_DIR'] + _fw_bak_path
+    _cmd = 'mkdir ' + BAK_DIR
+    os.system(_cmd)
+    # export settings
+    db_export(BAK_DIR + '/g420x.json')
+    # backup ipsec.d dir
+    _ipsec_dir = BAK_DIR + '/ipsec.d.old'
+    _cmd = 'cp -a ' + os.environ['SYS_VPN_CONF_DIR'] + ' ' + _ipsec_dir
+    os.system(_cmd)
+    # backup mlis dir
+    _mlis_dir = BAK_DIR + '/mlis.old'
+    _cmd = 'cp -a ' + os.environ['MLB_DIR'] + ' ' + _mlis_dir
+    os.system(_cmd)
+    # backup cellular.db
+    _cmd = 'cp -a ' + '/tmp/cellular.db' + ' ' + BAK_DIR
     os.system(_cmd)
 
     ''' Remove older files under /opt/mlis '''

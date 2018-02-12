@@ -6,18 +6,13 @@ MLB_BAK_DIR=/opt/backup
 # Restore backed up g420x.json if /opt/backup exists
 if [ -d "${MLB_BAK_DIR}" ]
 then
-    echo "" > /tmp/setup.log
-    echo '${MLB_BAK_DIR} exists, start to setup.' >> /tmp/setup.log
-    update-rc.d -f ppp remove
     # Backup folders from older configuration.
     cp -a "${WEB_APP_DB_PATH}" "${WEB_APP_DBTMP_PATH}"
     cp -a "${MLB_BAK_DIR}/cellular.db" /tmp/cellular.db
-    cp -a "${MLB_BAK_DIR}"/mlis.old/conf/openvpn/ "${MLB_CONF_DIR}"
-    # cp -a "${MLB_BAK_DIR}"/ipsec.d.old/* "${SYS_VPN_CONF_DIR}"
-    sync; sync
+    cp -a "${MLB_BAK_DIR}/ipsec.d.old/*" "${SYS_VPN_CONF_DIR}"
+    cp -a "${MLB_BAK_DIR}/mlis.old/conf/openvpn/*" "${MLB_OPENVPN_CONF_DIR}"
 
     # Call db_manager
-    echo 'Call db_manager.' >> /tmp/setup.log
     NAME=DB-MGR
     DESC=db_management
     DAEMON_PID_FILE=/var/run/db-manager.pid
@@ -27,15 +22,12 @@ then
         --pidfile $DAEMON_PID_FILE --make-pidfile \
         --name $NAME --exec $DAEMON -- $DAEMON_OPTS
     then
-        echo "MLB DB Manager is running." >> /tmp/setup.log
+        echo "MLB DB Manager is running."
     fi
     sleep 1
 
-    echo 'db_sender start. ' >> /tmp/setup.log
     /usr/bin/python "${MLB_DIR}/db_sender.py" import "${MLB_BAK_DIR}/g420x.json"
-    echo 'db_sender end' >> /tmp/setup.log
     cp ${WEB_APP_DBTMP_PATH} ${WEB_APP_DB_PATH}
-    sync; sync
 fi
 
 if [ -f ${MLB_INIT_PATH} ]

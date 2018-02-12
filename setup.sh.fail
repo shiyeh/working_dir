@@ -1,41 +1,59 @@
 #!/bin/sh
 source /opt/mlis/init-mlb-env.sh
 
+# update-rc.d web-console defaults
+source /opt/mlis/gen-init-G420x-conf.sh
+
+echo "Here is setup.sh start" > /tmp/setup.log
+
+echo `sqlite3 "${WEB_APP_DB_PATH}" 'select start_ip from dhcp_server'` >> /tmp/setup.log
+echo `sqlite3 "${WEB_APP_DBTMP_PATH}" 'select start_ip from dhcp_server'` >> /tmp/setup.log
+echo " 111\n" >> /tmp/setup.log
+
 MLB_BAK_DIR=/opt/backup
 
-# Restore backed up g420x.json if /opt/backup exists
+NAME=DB-MGR
+DESC=db_management
+DAEMON_PID_FILE=/var/run/db-manager.pid
+DAEMON_OPTS='start'
+DAEMON=/opt/mlis/db_management/db_manager.py
+if start-stop-daemon --start --quiet --background \
+    --pidfile $DAEMON_PID_FILE --make-pidfile \
+    --name $NAME --exec $DAEMON -- $DAEMON_OPTS
+then
+    echo "MLB DB Manager is running."
+fi
+source /opt/mlis/init-managements.sh
+
+# python /opt/mlis/db_management/db_manager.py start
+
+
+echo `sqlite3 "${WEB_APP_DB_PATH}" 'select start_ip from dhcp_server'` >> /tmp/setup.log
+echo `sqlite3 "${WEB_APP_DBTMP_PATH}" 'select start_ip from dhcp_server'` >> /tmp/setup.log
+echo " 222\n" >> /tmp/setup.log
+
+sleep 1
+# restore backed up g420x.json if /opt/backup exists
 if [ -d "${MLB_BAK_DIR}" ]
 then
-    echo "" > /tmp/setup.log
-    echo '${MLB_BAK_DIR} exists, start to setup.' >> /tmp/setup.log
-    update-rc.d -f ppp remove
-    # Backup folders from older configuration.
-    cp -a "${WEB_APP_DB_PATH}" "${WEB_APP_DBTMP_PATH}"
-    cp -a "${MLB_BAK_DIR}/cellular.db" /tmp/cellular.db
-    cp -a "${MLB_BAK_DIR}"/mlis.old/conf/openvpn/ "${MLB_CONF_DIR}"
-    # cp -a "${MLB_BAK_DIR}"/ipsec.d.old/* "${SYS_VPN_CONF_DIR}"
-    sync; sync
+    echo `sqlite3 "${WEB_APP_DB_PATH}" 'select start_ip from dhcp_server'` >> /tmp/setup.log
+    echo `sqlite3 "${WEB_APP_DBTMP_PATH}" 'select start_ip from dhcp_server'` >> /tmp/setup.log
+    echo " 333\n" >> /tmp/setup.log
 
-    # Call db_manager
-    echo 'Call db_manager.' >> /tmp/setup.log
-    NAME=DB-MGR
-    DESC=db_management
-    DAEMON_PID_FILE=/var/run/db-manager.pid
-    DAEMON_OPTS='start'
-    DAEMON=/opt/mlis/db_management/db_manager.py
-    if start-stop-daemon --start --quiet --background \
-        --pidfile $DAEMON_PID_FILE --make-pidfile \
-        --name $NAME --exec $DAEMON -- $DAEMON_OPTS
-    then
-        echo "MLB DB Manager is running." >> /tmp/setup.log
-    fi
-    sleep 1
+    # while [ ! -f "/tmp/db_ready" ]
+    # do
+    #     sleep 1
+    #     echo "sleep for waiting /tmp/app.db" >> /tmp/setup.log
+    # done
 
-    echo 'db_sender start. ' >> /tmp/setup.log
     /usr/bin/python "${MLB_DIR}/db_sender.py" import "${MLB_BAK_DIR}/g420x.json"
-    echo 'db_sender end' >> /tmp/setup.log
+    echo `sqlite3 "${WEB_APP_DB_PATH}" 'select start_ip from dhcp_server'` >> /tmp/setup.log
+    echo `sqlite3 "${WEB_APP_DBTMP_PATH}" 'select start_ip from dhcp_server'` >> /tmp/setup.log
+    echo " 444\n" >> /tmp/setup.log
     cp ${WEB_APP_DBTMP_PATH} ${WEB_APP_DB_PATH}
-    sync; sync
+    echo `sqlite3 "${WEB_APP_DB_PATH}" 'select start_ip from dhcp_server'` >> /tmp/setup.log
+    echo `sqlite3 "${WEB_APP_DBTMP_PATH}" 'select start_ip from dhcp_server'` >> /tmp/setup.log
+    echo " 555\n" >> /tmp/setup.log
 fi
 
 if [ -f ${MLB_INIT_PATH} ]
@@ -73,8 +91,13 @@ else
 
     if [ -d "${MLB_BAK_DIR}" ]
     then
+        echo "Here is MLB_BAK_DIR start" >> /tmp/setup.log
+        echo `sqlite3 "${WEB_APP_DB_PATH}" 'select start_ip from dhcp_server'` >> /tmp/setup.log
+        echo `sqlite3 "${WEB_APP_DBTMP_PATH}" 'select start_ip from dhcp_server'` >> /tmp/setup.log
+        echo " 666\n" >> /tmp/setup.log
         set -x
         cp -a "${MLB_BAK_DIR}/ipsec.d.old" "${SYS_VPN_CONF_DIR}"
+
 
         chmod 664 "${SYS_NETWORK_DIR}/${MLB_NETWORK_IFACES}"
         chmod 664 "${SYS_DIR}/${MLB_DHCP_CFG}"
@@ -85,8 +108,15 @@ else
         update-rc.d -f busybox-udhcpd remove
         update-rc.d -f ntpd remove
 
+        echo `sqlite3 "${WEB_APP_DB_PATH}" 'select start_ip from dhcp_server'` >> /tmp/setup.log
+        echo `sqlite3 "${WEB_APP_DBTMP_PATH}" 'select start_ip from dhcp_server'` >> /tmp/setup.log
+        echo " 777\n" >> /tmp/setup.log
+
         chmod +x "${SYS_PPP_DIR}/${MLB_PPP_ON_BOOT}"
         update-rc.d ppp defaults
+        echo `sqlite3 "${WEB_APP_DB_PATH}" 'select start_ip from dhcp_server'` >> /tmp/setup.log
+        echo `sqlite3 "${WEB_APP_DBTMP_PATH}" 'select start_ip from dhcp_server'` >> /tmp/setup.log
+        echo " 888\n" >> /tmp/setup.log
 
         chmod +x "${PPP_SETNAT_PATH}"
         chmod +x "${PPP_UPDATEWEB_PATH}"
@@ -94,13 +124,23 @@ else
 
         update-rc.d web-console defaults
         update-rc.d ipsec defaults
+        echo `sqlite3 "${WEB_APP_DB_PATH}" 'select start_ip from dhcp_server'` >> /tmp/setup.log
+        echo `sqlite3 "${WEB_APP_DBTMP_PATH}" 'select start_ip from dhcp_server'` >> /tmp/setup.log
+        echo " 888\n" >> /tmp/setup.log
 
         chmod 664 "${WEB_APP_DB_PATH}"
         chmod 664 "${WEB_STAT_DB_PATH}"
 
         source /opt/mlis/web-update-all.sh
+        echo `sqlite3 "${WEB_APP_DB_PATH}" 'select start_ip from dhcp_server'` >> /tmp/setup.log
+        echo `sqlite3 "${WEB_APP_DBTMP_PATH}" 'select start_ip from dhcp_server'` >> /tmp/setup.log
+        echo " 999\n" >> /tmp/setup.log
         ####### generate udhcpd config file
         source /opt/mlis/gen-init-G420x-conf.sh
+
+        echo `sqlite3 "${WEB_APP_DB_PATH}" 'select start_ip from dhcp_server'` >> /tmp/setup.log
+        echo `sqlite3 "${WEB_APP_DBTMP_PATH}" 'select start_ip from dhcp_server'` >> /tmp/setup.log
+        echo " 000\n" >> /tmp/setup.log
 
         chmod +x "${MLB_INIT_PATH}"
 
@@ -108,7 +148,11 @@ else
         chmod +x "${MLB_CONF_BIN}/serial-socket"
 
         set +x
+        echo "Here is MLB_BAK_DIR end" >> /tmp/setup.log
+        echo `date` >> /tmp/setup.log
+
     else
+        echo "Here is non-MLB_BAK_DIR start" >> /tmp/setup.log
     	####### backup "/etc/network/interfaces"
     	if [ -f "${SYS_NETWORK_DIR}/${MLB_NETWORK_IFACES}" ]
     	then
@@ -121,6 +165,7 @@ else
 
     	####### generate network interface config file
     	#### source gen-netif-conf.sh
+
 
     	### Brad's Workaround, copy busybox-udhcpd to replace udhcpd,
     	if [ -f "${SYS_BB_UDHCPD}" ]
@@ -258,7 +303,7 @@ else
         fi
 
         source /opt/mlis/web-update-all.sh
-        ####### generate udhcpd config file
+    	####### generate udhcpd config file
     	source /opt/mlis/gen-init-G420x-conf.sh
     	chmod +x "${MLB_INIT_PATH}"
 
@@ -266,6 +311,7 @@ else
     	chmod +x "${MLB_CONF_BIN}/serial-socket"
     	set +x
 
+        echo "Here is non-MLB_BAK_DIR end" >> /tmp/setup.log
     fi
 fi
 
@@ -278,8 +324,9 @@ fi
 ### For timezone, make sure timezone change to default (UTC)
 cp -f /usr/share/zoneinfo/UTC /etc/localtime
 
-### Remove the directory if /opt/bakcup exists.
+### Remove directory if /opt/bakcup exists.
 if [ -d "${MLB_BAK_DIR}" ]
 then
-    rm -rf "${MLB_BAK_DIR}"
+    # rm -rf "${MLB_BAK_DIR}"
 fi
+

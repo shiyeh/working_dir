@@ -1,7 +1,7 @@
 #!/bin/sh
 
 source init-mlb-env.sh
-log_path=`ls /opt/log/fwUpdateTmp.log`
+log_path=`ls /opt/log/fwUpdate*.log`
 
 sleep 1
 if [ -f "/tmp/mlis.tar.gz" ]
@@ -13,14 +13,8 @@ then
 
     source web-update-all.sh
 
-    echo "`date "+%T"` [INFO] Reboot system." >> ${log_path}
-    
-    DATE=`date "+%Y%m%d"`
-    log_bak_path="/opt/log/fwUpdate-${DATE}.log"
-    /bin/cp ${log_path} ${log_bak_path}
-    /bin/rm ${log_path}
-
     sync
+    echo "`date "+%T"` [INFO] Reboot system." >> ${log_path}
     reboot
     exit 0
 fi
