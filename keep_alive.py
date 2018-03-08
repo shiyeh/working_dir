@@ -4,6 +4,7 @@ import sys
 import sqlite3
 import time
 import subprocess
+from subprocess import Popen, PIPE
 import init_env
 from daemon import Daemon
 import logging
@@ -48,14 +49,18 @@ class KeepAlive(Daemon):
     def run(self):
         try:
             # Determine what the network device is 3G or 4G
-            mdm_3G = '/dev/ttyACM0'
+            mdm_3G = ['/dev/ttyACM0', '/dev/ttyUSB3']
             mdm_4G = '/dev/cdc-wdm1'
+            nic_dev = 'no_dev'
 
-            if os.path.exists(mdm_3G):
-                nic_dev = 'ppp0'
-            elif os.path.exists(mdm_4G):
+            for _mdm in mdm_3G:
+                if os.path.exists(_mdm):
+                    nic_dev = 'ppp0'
+
+            if os.path.exists(mdm_4G):
                 nic_dev = 'wwan1'
-            else:
+
+            if nic_dev == 'no_dev':
                 log.debug('Network device not found.')
                 log.debug('Canceling keep_alive process...')
                 sys.exit(1)
@@ -67,6 +72,8 @@ class KeepAlive(Daemon):
             oldTxBytes = subprocess.check_output([_cmd, _txb]).strip()
 
             while True:
+                time.sleep(1)
+
                 # Connect to database
                 con = sqlite3.connect(os.environ["WEB_APP_DBTMP_PATH"])
                 cur = con.cursor()
@@ -80,6 +87,12 @@ class KeepAlive(Daemon):
                 intervalTmp = cur.execute(
                     "select ping_intvl from lan_setting;").fetchone()
                 timeSpec = int(intervalTmp[0])
+
+                # retry_count = cur.execute(
+                #     "select ping_retry from lan_setting;").fetchone()
+                # retry_count_spec = int(retry_count[0])
+                retry_count_spec = 5
+
                 con.close()
 
                 # Record the current time,
@@ -104,28 +117,33 @@ class KeepAlive(Daemon):
                         if txSpeed <= 1:
                             log.debug('Detect the TX speed less than 1 kbytes.')
 
-                            response = subprocess.check_call(
-                                "ping -c2 " + hostName, shell=True)
-
-                            if response == 0:
-                                log.debug('Ping %s successful.' % hostName)
-                                self.count = 0
+                            _cmd_ping = 'ping -c2 ' + hostName
+                            _p_sub = subprocess.Popen(_cmd_ping.split(), stdout=PIPE, stderr=PIPE)
+                            out, err = _p_sub.communicate()
+                            if _p_sub.returncode != 0:
+                                raise Exception
 
                         self.lastRunTime = time.time()
                         oldTxBytes = newTxBytes
+                    else:
+                        continue
 
                 except Exception:
-                    """ If ping failed count to 3, reboot the system. """
+                    """ If ping failed count to specified number, reboot the system. """
                     self.count += 1
-                    log.debug('Count = ' + str(self.count))
+                    log.debug('Ping failed, Count = ' + str(self.count))
+                    log.debug(out.strip())
 
-                    if self.count >= 3:
-                        print 'Count to ' + str(self.count) + ', reboot the system.'
+                    if self.count >= retry_count_spec:
+                        log.debug('Count to ' + str(self.count) + ', reboot the system.')
                         self._bckup_logs()
                         os.system('/sbin/reboot')
                         sys.exit(1)
+                else:
+                    log.info('Ping {} successful.'.format(hostName))
+                    log.info(out.strip())
+                    self.count = 0
 
-                time.sleep(1)
         except Exception:
             log.exception('Keep_alive is not run.')
 
@@ -136,7 +154,3 @@ if __name__ == '__main__':
 
     p = KeepAlive()
     p.start()
-
-    # while True:
-    #     time.sleep(1)
-    #     print time.time()
