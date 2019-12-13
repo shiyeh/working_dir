@@ -34,19 +34,16 @@ def main():
     _txp = '/sys/class/net/{}/statistics/tx_bytes'.format(dev)
 
     oldTxPkt = int(subprocess.check_output([_cmd, _txp]).strip())
-    print oldTxPkt
     # txPackets = p1.communicate()[0].strip()
     # txList[0] = txPackets
     time1 = time2 = time.time()
-    print time1
-    print time2
 
     while True:
         print 'oldTxPkt=', oldTxPkt
         # p2 = Popen([_cmd, _txp], stdout=PIPE, stderr=PIPE)
         newTxPkt = int(subprocess.check_output([_cmd, _txp]).strip())
 
-        print oldTxPkt, newTxPkt
+        print "oldTxPkt: %d, newTxPkt: %d" % (oldTxPkt, newTxPkt)
         # Calculate transmision speed: kB/s
         speed = (newTxPkt - oldTxPkt) / 1024.0 / 2
         print('Now speed is {:.3f} kB/s'.format(speed))
